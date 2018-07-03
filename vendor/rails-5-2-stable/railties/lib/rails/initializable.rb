@@ -75,10 +75,12 @@ module Rails
       def initializers_chain
         initializers = Collection.new
         ancestors.reverse_each do |klass|
-          next unless klass.respond_to?(:initializers)
-          initializers = initializers + klass.initializers
+          if klass.respond_to?(:initializers)
+            initializers = initializers + klass.initializers
+          end
         end
-        initializers
+
+        return initializers
       end
 
       def initializers_for(binding)

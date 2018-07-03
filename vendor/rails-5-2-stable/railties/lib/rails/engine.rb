@@ -552,6 +552,8 @@ module Rails
     end
 
     # Add configured load paths to Ruby's load path, and remove duplicate entries.
+    # 
+    # 将load_path, autoload_path, eager_load_path等加入$LOAD_PATH中
     initializer :set_load_path, before: :bootstrap_hook do
       _all_load_paths.reverse_each do |path|
         $LOAD_PATH.unshift(path) if File.directory?(path)
@@ -564,6 +566,8 @@ module Rails
     #
     # This needs to be an initializer, since it needs to run once
     # per engine and get the engine as a block parameter.
+    #
+    # 将自动加载路径添加到Dependencies类的autoload_paths中
     initializer :set_autoload_paths, before: :bootstrap_hook do
       ActiveSupport::Dependencies.autoload_paths.unshift(*_all_autoload_paths)
       ActiveSupport::Dependencies.autoload_once_paths.unshift(*_all_autoload_once_paths)
@@ -597,6 +601,7 @@ module Rails
       end
     end
 
+    # 加载环境配置信息
     initializer :load_environment_config, before: :load_environment_hook, group: :all do
       paths["config/environments"].existent.each do |environment|
         require environment
@@ -609,6 +614,7 @@ module Rails
       end
     end
 
+    # load initializers目录下的初始化脚本
     initializer :load_config_initializers do
       config.paths["config/initializers"].existent.sort.each do |initializer|
         load_config_initializer(initializer)

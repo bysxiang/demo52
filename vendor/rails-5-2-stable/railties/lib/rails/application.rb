@@ -391,13 +391,18 @@ module Rails
     #
     # +Rails.application.secrets.namespace+ returns +my_app_production+ in the
     # production environment.
+    # 
+    # 返回config/secrets.yml的hash信息，返回Rails.env节点信息
     def secrets
       @secrets ||= begin
         secrets = ActiveSupport::OrderedOptions.new
         files = config.paths["config/secrets"].existent
-        files = files.reject { |path| path.end_with?(".enc") } unless config.read_encrypted_secrets
+        if ! config.read_encrypted_secrets
+          files = files.reject { |path| path.end_with?(".enc") }
+        end
         secrets.merge! Rails::Secrets.parse(files, env: Rails.env)
 
+        # 如果secrets.yml中没有找到secret_key_base、secret_token，则使用默认config的设置值
         # Fallback to config.secret_key_base if secrets.secret_key_base isn't set
         secrets.secret_key_base ||= config.secret_key_base
         # Fallback to config.secret_token if secrets.secret_token isn't set
@@ -440,6 +445,8 @@ module Rails
     # +config/master.key+.
     def credentials
       @credentials ||= encrypted("config/credentials.yml.enc")
+
+      return @credentials
     end
 
     # Shorthand to decrypt any encrypted configurations or files.

@@ -39,6 +39,9 @@ module ActiveSupport
     # This method must also receive a block that will be called once a path
     # changes. The array of files and list of directories cannot be changed
     # after FileUpdateChecker has been initialized.
+    # 
+    # files表示的是文件列表
+    # dirs是一个hash，键为目录名称，值为要纳入监视的文件扩展名数组 => { "app" => ["rb", "txt"] }
     def initialize(files, dirs = {}, &block)
       unless block
         raise ArgumentError, "A block is required to initialize a FileUpdateChecker"
@@ -58,6 +61,8 @@ module ActiveSupport
     # Check if any of the entries were updated. If so, the watched and/or
     # updated_at values are cached until the block is executed via +execute+
     # or +execute_if_updated+.
+    #
+    # 检查是否被更新了，如果更新了的化，会修改@watched与updated_at
     def updated?
       current_watched = watched
       if @last_watched.size != current_watched.size
@@ -77,6 +82,8 @@ module ActiveSupport
 
     # Executes the given block and updates the latest watched files and
     # timestamp.
+    # 
+    # 执行给定的块，并更新@watched和@last_update_at
     def execute
       @last_watched   = watched
       @last_update_at = updated_at(@last_watched)
@@ -87,6 +94,8 @@ module ActiveSupport
     end
 
     # Execute the block given if updated.
+    # 
+    # 如果监控的文件被更新，执行指定的块
     def execute_if_updated
       if updated?
         yield if block_given?
@@ -99,14 +108,19 @@ module ActiveSupport
 
     private
 
+      # 返回要监视的所有文件列表
       def watched
         @watched || begin
           all = @files.select { |f| File.exist?(f) }
-          all.concat(Dir[@glob]) if @glob
+          if @glob
+            all.concat(Dir[@glob])
+          end
+          
           all
         end
       end
 
+      # 最后修改时间
       def updated_at(paths)
         @updated_at || max_mtime(paths) || Time.at(0)
       end
@@ -118,6 +132,8 @@ module ActiveSupport
       # can happen for example if the user changes the clock by hand. It is
       # healthy to consider this edge case because with mtimes in the future
       # reloading is not triggered.
+      #
+      # 获取最大的修改时间
       def max_mtime(paths)
         time_now = Time.now
         max_mtime = nil
@@ -130,34 +146,47 @@ module ActiveSupport
         paths.each do |path|
           mtime = File.mtime(path)
 
-          next if time_now.compare_without_coercion(mtime) < 0
-
-          if max_mtime.nil? || max_mtime.compare_without_coercion(mtime) < 0
-            max_mtime = mtime
+          if time_now.compare_without_coercion(mtime) >= 0
+            if max_mtime.nil? || max_mtime.compare_without_coercion(mtime) < 0
+              max_mtime = mtime
+            end
           end
         end
 
-        max_mtime
+        return max_mtime
       end
 
+      # 根据构造函数的dirs，生成glob规则
+      # dirs指定了不同目录检索的文件类型
       def compile_glob(hash)
         hash.freeze # Freeze so changes aren't accidentally pushed
-        return if hash.empty?
+        if ! hash.empty?
+          globs = hash.map do |key, value|
+            "#{escape(key)}/**/*#{compile_ext(value)}"
+          end
 
-        globs = hash.map do |key, value|
-          "#{escape(key)}/**/*#{compile_ext(value)}"
+          return "{#{globs.join(",")}}"
+        else
+          return
         end
-        "{#{globs.join(",")}}"
       end
 
       def escape(key)
         key.gsub(",", '\,')
       end
 
+      # 生成.{txt,rb}这样的规则
+      # 用于Dir.glob
       def compile_ext(array)
         array = Array(array)
-        return if array.empty?
-        ".{#{array.join(",")}}"
-      end
+
+        if ! array.empty?
+          return ".{#{array.join(",")}}"
+        else
+          return
+        end
+        
+      end # compile_ext .. end
+
   end
 end

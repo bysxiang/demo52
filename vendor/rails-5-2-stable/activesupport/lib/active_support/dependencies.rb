@@ -58,6 +58,7 @@ module ActiveSupport #:nodoc:
     # Stack of files being loaded.
     mattr_accessor :loading, default: []
 
+    # 标识 我们该load一个文件还是require一个文件
     # Should we load files or require them?
     mattr_accessor :mechanism, default: ENV["NO_RELOAD"] ? :require : :load
 
@@ -98,7 +99,7 @@ module ActiveSupport #:nodoc:
       # [[Object], [Namespace]].
 
       def initialize
-        @watching = []
+        @watching = [] # 记录每次监视的模块名称
         @stack = Hash.new { |h, k| h[k] = [] }
       end
 
@@ -112,6 +113,8 @@ module ActiveSupport #:nodoc:
 
       # Returns a list of new constants found since the last call to
       # <tt>watch_namespaces</tt>.
+      # 返回自从上次调用watch_namespace方法以来发现的常量
+      # 返回的是完整常量
       def new_constants
         constants = []
 
@@ -121,34 +124,62 @@ module ActiveSupport #:nodoc:
           # was originally called
           original_constants = @stack[namespace].last
 
-          mod = Inflector.constantize(namespace) if Dependencies.qualified_const_defined?(namespace)
-          next unless mod.is_a?(Module)
+          # puts "输出original"
+          # p original_constants
 
-          # Get a list of the constants that were added
-          new_constants = mod.constants(false) - original_constants
-
-          # @stack[namespace] returns an Array of the constants that are being evaluated
-          # for that namespace. For instance, if parent.rb requires child.rb, the first
-          # element of @stack[Object] will be an Array of the constants that were present
-          # before parent.rb was required. The second element will be an Array of the
-          # constants that were present before child.rb was required.
-          @stack[namespace].each do |namespace_constants|
-            namespace_constants.concat(new_constants)
+          if Dependencies.qualified_const_defined?(namespace)
+            mod = Inflector.constantize(namespace)
           end
 
-          # Normalize the list of new constants, and add them to the list we will return
-          new_constants.each do |suffix|
-            constants << ([namespace, suffix] - ["Object"]).join("::".freeze)
-          end
+          # 原始源码是有bug的，虽然它基本不会被触发 
+          if ! mod.nil? && mod.is_a?(Module)
+            # Get a list of the constants that were added
+            new_constants = mod.constants(false) - original_constants
+
+            # @stack[namespace] returns an Array of the constants that are being evaluated
+            # for that namespace. For instance, if parent.rb requires child.rb, the first
+            # element of @stack[Object] will be an Array of the constants that were present
+            # before parent.rb was required. The second element will be an Array of the
+            # constants that were present before child.rb was required.
+            @stack[namespace].each do |namespace_constants|
+              # puts "输出namespace_constants"
+              # p namespace_constants
+
+              namespace_constants.concat(new_constants)
+            end
+
+            # puts "输出new_constants"
+            # p new_constants
+
+            # puts "输出@stack"
+            # p @stack
+
+            # Normalize the list of new constants, and add them to the list we will return
+            new_constants.each do |suffix|
+              x_y = [namespace, suffix]
+              # puts "输出namespace, suffix"
+              # p x_y
+
+              constants << (x_y - ["Object"]).join("::".freeze)
+            end
+          end # if .. end
+          
         end
         constants
       ensure
         # A call to new_constants is always called after a call to watch_namespaces
+        # 当执行此方法后，从监视栈中弹出监视的模块与常量
+        # 即使发生异常
+        #puts "pop之前, #{@watching}"
         pop_modules(@watching.pop)
+        #puts "输出@watching, #{@watching}"
       end
 
       # Add a set of modules to the watch stack, remembering the initial
       # constants.
+      # 监视一组模块，@watching保存的是模块的名称,它是一个数组的数组，类似[["String", "Abc"]]
+      # 所以只要一直调用这个方法@watching中就一直向内添加模块名称数组
+      # @stack是一个hash，分别是模块名称，值为此模块的原始常量数组的数组，类似[[:A, :B]]
       def watch_namespaces(namespaces)
         @watching << namespaces.map do |namespace|
           module_name = Dependencies.to_constant_name(namespace)
@@ -161,10 +192,11 @@ module ActiveSupport #:nodoc:
       end
 
       private
+        # 从监视栈中弹出监视的模块与常量
         def pop_modules(modules)
           modules.each { |mod| @stack[mod].pop }
         end
-    end
+    end # WatchStack .. end
 
     # An internal stack used to record which constants are loaded by any block.
     mattr_accessor :constant_watch_stack, default: WatchStack.new
@@ -174,9 +206,12 @@ module ActiveSupport #:nodoc:
       def self.append_features(base)
         base.class_eval do
           # Emulate #exclude via an ivar
-          return if defined?(@_const_missing) && @_const_missing
-          @_const_missing = instance_method(:const_missing)
-          remove_method(:const_missing)
+          if defined?(@_const_missing) && @_const_missing
+            return
+          else
+            @_const_missing = instance_method(:const_missing)
+            remove_method(:const_missing)
+          end
         end
         super
       end
@@ -189,7 +224,9 @@ module ActiveSupport #:nodoc:
       end
 
       def const_missing(const_name)
+        # from_mod为Object或当前类(模块)
         from_mod = anonymous? ? guess_for_anonymous(const_name) : self
+        #puts "输出from_mod, #{from_mod}, const_name: #{const_name}"
         Dependencies.load_missing_constant(from_mod, const_name)
       end
 
@@ -198,7 +235,11 @@ module ActiveSupport #:nodoc:
       # that defines the constant. Anonymous modules cannot follow these
       # conventions and therefore we assume that the user wants to refer to a
       # top-level constant.
+      # 检查常量是否定义在Object中，如果是，则抛出异常
+      # 证明它不应在匿名模块中
       def guess_for_anonymous(const_name)
+        # 这段代码有些莫名其妙，因为如果常量定义于Object或其祖先中(模块或类)，根本不会触发const_missing方法
+        # 这算什么？线程安全检查？
         if Object.const_defined?(const_name)
           raise NameError.new "#{const_name} cannot be autoloaded from an anonymous class or module", const_name
         else
@@ -227,6 +268,8 @@ module ActiveSupport #:nodoc:
       # Interprets a file using <tt>mechanism</tt> and marks its defined
       # constants as autoloaded. <tt>file_name</tt> can be either a string or
       # respond to <tt>to_path</tt>.
+      # 使用一种机制解释文件并定义常量自动加载。
+      # file_name可以可以是字符串或是响应to_path方法的对象
       #
       # Use this method in code that absolutely needs a certain constant to be
       # defined at that point. A typical use case is to make constant name
@@ -234,14 +277,20 @@ module ActiveSupport #:nodoc:
       # different namespaces whose evaluation would depend on load order
       # otherwise.
       def require_dependency(file_name, message = "No such file to load -- %s.rb")
-        file_name = file_name.to_path if file_name.respond_to?(:to_path)
-        unless file_name.is_a?(String)
+        if file_name.respond_to?(:to_path)
+          file_name = file_name.to_path
+        end
+
+        if ! file_name.is_a?(String)
           raise ArgumentError, "the file name must either be a String or implement #to_path -- you passed #{file_name.inspect}"
         end
 
         Dependencies.depend_on(file_name, message)
       end
 
+      # 如果是load模式，且当前正在监视文件的化，调用new_constants_in方法
+      # 否则执行yield块，它一般的实现是Kernel#load一个文件
+      # 不应依赖它的返回值
       def load_dependency(file)
         if Dependencies.load? && Dependencies.constant_watch_stack.watching?
           Dependencies.new_constants_in(Object) { yield }
@@ -271,7 +320,8 @@ module ActiveSupport #:nodoc:
       end
 
       private
-
+        # 重写了系统的load, require
+        # 都采用load_dependency方法实现
         def load(file, wrap = false)
           result = false
           load_dependency(file) { result = super }
@@ -283,9 +333,12 @@ module ActiveSupport #:nodoc:
           load_dependency(file) { result = super }
           result
         end
-    end
+    end # Loadable .. end
 
     # Exception file-blaming.
+    # 
+    # 这个模块扩展了exception，
+    # 它可以描述是加载哪个文件发生的错误
     module Blamable #:nodoc:
       def blame_file!(file)
         (@blamed_files ||= []).unshift file
@@ -308,7 +361,8 @@ module ActiveSupport #:nodoc:
 
     def hook!
       Object.class_eval { include Loadable }
-      Module.class_eval { include ModuleConstMissing }
+      # 由于Module继承自Object, 那么Module也包含了Loadable模块的方法
+      Module.class_eval { include ModuleConstMissing } 
       Exception.class_eval { include Blamable }
     end
 
@@ -322,7 +376,7 @@ module ActiveSupport #:nodoc:
     end
 
     def depend_on(file_name, message = "No such file to load -- %s.rb")
-      path = search_for_file(file_name)
+      path = search_for_file(file_name) # 判断是否在autoload_paths中
       require_or_load(path || file_name)
     rescue LoadError => load_error
       if file_name = load_error.message[/ -- (.*?)(\.rb)?$/, 1]
@@ -341,12 +395,17 @@ module ActiveSupport #:nodoc:
     end
 
     def require_or_load(file_name, const_path = nil)
-      file_name = $` if file_name =~ /\.rb\z/
+      if file_name =~ /\.rb\z/
+        file_name = $`
+      end
+      #puts "输出file_name: #{file_name}， const_path: #{const_path}"
+
       expanded = File.expand_path(file_name)
       return if loaded.include?(expanded)
 
       Dependencies.load_interlock do
         # Maybe it got loaded while we were waiting for our lock:
+        # 也许等待锁的时候已经被加载了
         return if loaded.include?(expanded)
 
         # Record that we've seen this file *before* loading it to avoid an
@@ -359,7 +418,14 @@ module ActiveSupport #:nodoc:
             # Enable warnings if this file has not been loaded before and
             # warnings_on_first_load is set.
             load_args = ["#{file_name}.rb"]
-            load_args << const_path unless const_path.nil?
+            if ! const_path.nil?
+              load_args << const_path
+            end
+
+            # puts "输出*load_args, #{load_args}"
+            # p *load_args
+
+            # 这里load_args是一个数组，*load_args将作为参数依次传入
 
             if !warnings_on_first_load || history.include?(expanded)
               result = load_file(*load_args)
@@ -380,7 +446,7 @@ module ActiveSupport #:nodoc:
         history << expanded
         result
       end
-    end
+    end # require_or_load .. end
 
     # Is the provided constant path defined?
     def qualified_const_defined?(path)
@@ -390,37 +456,54 @@ module ActiveSupport #:nodoc:
     # Given +path+, a filesystem path to a ruby file, return an array of
     # constant paths which would cause Dependencies to attempt to load this
     # file.
+    # 如果path是autoload_paths目录下的目录或文件
+    # 返回paths(数组), 当一个目录和子目录都被添加到autoload_paths中时，
+    # 会被返回多个路径
     def loadable_constants_for_path(path, bases = autoload_paths)
-      path = $` if path =~ /\.rb\z/
+      if path =~ /\.rb\z/
+        path = $`
+      end
       expanded_path = File.expand_path(path)
-      paths = []
 
+      paths = []
       bases.each do |root|
         expanded_root = File.expand_path(root)
-        next unless expanded_path.start_with?(expanded_root)
+        if expanded_path.start_with?(expanded_root)
 
-        root_size = expanded_root.size
-        next if expanded_path[root_size] != ?/.freeze
+          root_size = expanded_root.size
+          if expanded_path[root_size] == "/".freeze
+            
+            nesting = expanded_path[(root_size + 1)..-1]
+            if ! nesting.blank?
+              paths << nesting.camelize # 如果有嵌套关系，以::分隔
+            end
+          end
 
-        nesting = expanded_path[(root_size + 1)..-1]
-        paths << nesting.camelize unless nesting.blank?
-      end
+        end # if expanded_path .. end
+
+      end # bases .. end
 
       paths.uniq!
+      #puts "输出paths: #{paths}"
       paths
     end
 
     # Search for a file in autoload_paths matching the provided suffix.
-    # 搜索文件，例如：
+    # 在autoload_paths路径中搜索文件，例如：
     # 一个auto_paths中有这么一个目录: app/xt/, path_suffix 为hello
     # 那么检测它是否存在？
     # 这个方法是用于检测文件, 而不是目录
+    # 如果存在，返回完整路径，否则返回nil
     def search_for_file(path_suffix)
       path_suffix = path_suffix.sub(/(\.rb)?$/, ".rb".freeze)
 
       autoload_paths.each do |root|
         path = File.join(root, path_suffix)
-        return path if File.file? path
+
+        if File.file? path
+          return path
+        end
+        
       end
       nil # Gee, I sure wish we had first_match ;-)
     end
@@ -455,6 +538,11 @@ module ActiveSupport #:nodoc:
     # assigned to +into+'s constants with the name +const_name+. Provided that
     # the directory was loaded from a reloadable base path, it is added to the
     # set of constants that are to be unloaded.
+    # 只是判断是否包含一个目录，返回一个Module，如果在此模块中包含方法
+    # 此时，是无法访问到方法的。
+    # 例如 自动加载路径为xt/，下面有/model2/xx.rb, xx.rb中定义着Xx类，它
+    # 的上层模块是Model2, 只有在加载了Xx类之后，才能方法Model2模块定义的
+    # 方法
     def autoload_module!(into, const_name, qualified_name, path_suffix)
       mod = nil
 
@@ -477,8 +565,15 @@ module ActiveSupport #:nodoc:
     # If the second parameter is left off, then Dependencies will construct a
     # set of names that the file at +path+ may define. See
     # +loadable_constants_for_path+ for more details.
+    # 
+    # 加载一个文件，并将新增的常量添加到autoloaded_constants中
     def load_file(path, const_paths = loadable_constants_for_path(path))
-      const_paths = [const_paths].compact unless const_paths.is_a? Array
+      #puts "const_paths: #{const_paths}"
+
+      # 转为非空数组
+      if ! const_paths.is_a? Array
+        const_paths = [const_paths].compact
+      end
       parent_paths = const_paths.collect { |const_path| const_path[/.*(?=::)/] || ::Object }
 
       result = nil
@@ -486,12 +581,19 @@ module ActiveSupport #:nodoc:
         result = Kernel.load path
       end
 
-      autoloaded_constants.concat newly_defined_paths unless load_once_path?(path)
+      # puts "输出newly"
+      # p newly_defined_paths
+
+      if ! load_once_path?(path)
+        autoloaded_constants.concat newly_defined_paths
+      end
       autoloaded_constants.uniq!
-      result
+      
+      return result
     end
 
     # Returns the constant path for the provided parent and constant name.
+    # 返回以::分隔的常量字符串，例如Model2::Abc
     def qualified_name_for(mod, name)
       mod_name = to_constant_name mod
       mod_name == "Object" ? name.to_s : "#{mod_name}::#{name}"
@@ -500,15 +602,20 @@ module ActiveSupport #:nodoc:
     # Load the constant named +const_name+ which is missing from +from_mod+. If
     # it is not possible to load the constant into from_mod, try its parent
     # module using +const_missing+.
+    # 加载常量，优先从文件中加载，然后尝试加载目录，最后从父模块中尝试加载
+    # 它是根据::分隔符，逐级加载的
+    # 
     def load_missing_constant(from_mod, const_name)
       unless qualified_const_defined?(from_mod.name) && Inflector.constantize(from_mod.name).equal?(from_mod)
         raise ArgumentError, "A copy of #{from_mod} has been removed from the module tree but is still active!"
       end
 
       qualified_name = qualified_name_for from_mod, const_name
-      path_suffix = qualified_name.underscore
+      path_suffix = qualified_name.underscore # 常量保存的路径,根据约定
 
       file_path = search_for_file(path_suffix)
+
+      #puts "load_missing_constant: #{from_mod}, #{const_name}"
 
       if file_path
         expanded = File.expand_path(file_path)
@@ -518,47 +625,68 @@ module ActiveSupport #:nodoc:
           raise "Circular dependency detected while autoloading constant #{qualified_name}"
         else
           require_or_load(expanded, qualified_name)
-          raise LoadError, "Unable to autoload constant #{qualified_name}, expected #{file_path} to define it" unless from_mod.const_defined?(const_name, false)
+          if ! from_mod.const_defined?(const_name, false)
+            raise LoadError, "Unable to autoload constant #{qualified_name}, expected #{file_path} to define it"
+          end
+
           return from_mod.const_get(const_name)
         end
       elsif mod = autoload_module!(from_mod, const_name, qualified_name, path_suffix)
         return mod
-      elsif (parent = from_mod.parent) && parent != from_mod &&
-            ! from_mod.parents.any? { |p| p.const_defined?(const_name, false) }
-        # If our parents do not have a constant named +const_name+ then we are free
-        # to attempt to load upwards. If they do have such a constant, then this
-        # const_missing must be due to from_mod::const_name, which should not
-        # return constants from from_mod's parents.
-        begin
-          # Since Ruby does not pass the nesting at the point the unknown
-          # constant triggered the callback we cannot fully emulate constant
-          # name lookup and need to make a trade-off: we are going to assume
-          # that the nesting in the body of Foo::Bar is [Foo::Bar, Foo] even
-          # though it might not be. Counterexamples are
-          #
-          #   class Foo::Bar
-          #     Module.nesting # => [Foo::Bar]
-          #   end
-          #
-          # or
-          #
-          #   module M::N
-          #     module S::T
-          #       Module.nesting # => [S::T, M::N]
-          #     end
-          #   end
-          #
-          # for example.
-          return parent.const_missing(const_name)
-        rescue NameError => e
-          raise unless e.missing_name? qualified_name_for(parent, const_name)
-        end
-      end
+      else
+        # 这个分支其实在模仿ruby const_missing的行为，对于完全限定名形式访问常量，
+        # ruby不会去加载父模块的常量，这里如果没有找到常量，调用其父模块的常量
+        # 否则触发NameError异常，这是模仿ruby的默认行为
+        # 
+        # 如果from_mod == parent_mod, 即from_mod是Object和父类没有定义常量时，
+        # 调用父类的const_missing，否则抛出NameError异常
 
-      name_error = NameError.new("uninitialized constant #{qualified_name}", const_name)
-      name_error.set_backtrace(caller.reject { |l| l.starts_with? __FILE__ })
-      raise name_error
-    end
+        parent = from_mod.parent
+        # 是否定义在父模块中
+        any_r = from_mod.parents.any? { |p| p.const_defined?(const_name, false) }
+
+        # 当from_mod为Object时，parent == from_mod
+        if parent != from_mod && ! any_r
+          # If our parents do not have a constant named +const_name+ then we are free
+          # to attempt to load upwards. If they do have such a constant, then this
+          # const_missing must be due to from_mod::const_name, which should not
+          # return constants from from_mod's parents.
+          begin
+            # Since Ruby does not pass the nesting at the point the unknown
+            # constant triggered the callback we cannot fully emulate constant
+            # name lookup and need to make a trade-off: we are going to assume
+            # that the nesting in the body of Foo::Bar is [Foo::Bar, Foo] even
+            # though it might not be. Counterexamples are
+            #
+            #   class Foo::Bar
+            #     Module.nesting # => [Foo::Bar]
+            #   end
+            #
+            # or
+            #
+            #   module M::N
+            #     module S::T
+            #       Module.nesting # => [S::T, M::N]
+            #     end
+            #   end
+            #
+            # for example.
+            return parent.const_missing(const_name)
+          rescue NameError => e
+            if e.missing_name? qualified_name_for(parent, const_name)
+              raise
+            end
+
+          end
+        else
+          name_error = NameError.new("uninitialized constant #{qualified_name}", const_name)
+          name_error.set_backtrace(caller.reject { |l| l.starts_with? __FILE__ })
+          raise name_error
+        end # inner if .. else .. end
+      end # if .. end
+
+      
+    end # load_missing_constant .. end
 
     # Remove the constants that have been autoloaded, and those that have been
     # marked for unloading. Before each constant is removed a callback is sent
@@ -663,25 +791,36 @@ module ActiveSupport #:nodoc:
     # If the provided block does not run to completion, and instead raises an
     # exception, any new constants are regarded as being only partially defined
     # and will be removed immediately.
+    # 
+    # 这个方法正确的实现是，监视父模块，通过提供一个块，
     def new_constants_in(*descs)
+      # puts "输出descs"
+      # p descs
       constant_watch_stack.watch_namespaces(descs)
       success = false
 
       begin
+        #puts "输出constant_watch_stack, #{constant_watch_stack}"
         yield # Now yield to the code that is to define new constants.
         success = true
       ensure
         new_constants = constant_watch_stack.new_constants
 
-        return new_constants if success
+        #puts "success: #{success}, new_constants:#{new_constants}"
 
-        # Remove partially loaded constants.
-        new_constants.each { |c| remove_constant(c) }
+        if success
+          return new_constants
+        else
+          # Remove partially loaded constants.
+          new_constants.each { |c| remove_constant(c) }
+        end
+    
       end
     end
 
     # Convert the provided const desc to a qualified constant name (as a string).
     # A module, class, symbol, or string may be provided.
+    # 将常量名称转换为字符串
     def to_constant_name(desc) #:nodoc:
       case desc
       when String then desc.sub(/^::/, "")
@@ -693,6 +832,7 @@ module ActiveSupport #:nodoc:
       end
     end
 
+    # 移除常量
     def remove_constant(const) #:nodoc:
       # Normalize ::Foo, ::Object::Foo, Object::Foo, Object::Object::Foo, etc. as Foo.
       normalized = const.to_s.sub(/\A::/, "")
@@ -720,7 +860,10 @@ module ActiveSupport #:nodoc:
         # rather than the very const argument because we do not want to
         # trigger Kernel#autoloads, see the comment below.
         parent_name = constants.join("::")
-        return unless qualified_const_defined?(parent_name)
+        if ! qualified_const_defined?(parent_name)
+          return
+        end
+        
         parent = constantize(parent_name)
       end
 
@@ -740,23 +883,26 @@ module ActiveSupport #:nodoc:
       # far as Ruby is concerned--- because if the user removes the macro
       # call from a class or module that were not autoloaded, as in the
       # example above with Object, accessing to that constant must err.
-      unless parent.autoload?(to_remove)
+      # const_get方法会触发autoload，导致常量被定义到了Object中，
+      # 这段代码处理不是autoload的常量的回调
+      if ! parent.autoload?(to_remove)
         begin
           constantized = parent.const_get(to_remove, false)
         rescue NameError
           # The constant is no longer reachable, just skip it.
           return
-        else
+        else # 没有发生异常的情况
           constantized.before_remove_const if constantized.respond_to?(:before_remove_const)
         end
-      end
+      end # if ! parent.autoload? .. end
 
       begin
         parent.instance_eval { remove_const to_remove }
       rescue NameError
         # The constant is no longer reachable, just skip it.
       end
-    end
+    end # remove_constant .. end
+
   end
 end
 

@@ -43,6 +43,9 @@ module Rails
     #   root["app/controllers"].existent # => ["/rails/app/controllers"]
     #
     # Check the <tt>Rails::Paths::Path</tt> documentation for more information.
+
+    # Root表示一个目录的根，它包含一个@root，它是一个hash，它维护一个路径的键值对，
+    # 每个值为一个Path对象
     class Root
       attr_accessor :path
 
@@ -51,6 +54,8 @@ module Rails
         @root = {}
       end
 
+      # 添加一个Path，如果此path已存在，会复用它的glob
+      # 此操作将会覆盖之前已存在的Path对象
       def []=(path, value)
         glob = self[path] ? self[path].glob : nil
         add(path, with: value, glob: glob)
@@ -107,17 +112,28 @@ module Rails
       end
     end
 
+    # 路径对象，它持有一个Root对象，表示这个路径的根，
+    # 它可以是一个
     class Path
       include Enumerable
 
       attr_accessor :glob
 
+      # current 实际路径 !
+      # paths   名义路径, 它是一个数组，它通常是仅包含一个元素的数组
+      # 它可以是单个元素，也可以是数组，通常是用于单个元素
+      # 当指定options with选项时，它可以指定目录，也可以是单独的文件
+      # 
+      # options glob选项，它针对的是paths中的目录
       def initialize(root, current, paths, options = {})
         @paths    = paths
         @current  = current
         @root     = root
         @glob     = options[:glob]
-
+        
+        # 前3个都是自动加载的
+        # load_path选项，它是适用于 通过require来加载使用的情况
+        # 这些路径都会被添加到$LOAD_PATH之前
         options[:autoload_once] ? autoload_once! : skip_autoload_once!
         options[:eager_load]    ? eager_load!    : skip_eager_load!
         options[:autoload]      ? autoload!      : skip_autoload!
@@ -128,6 +144,9 @@ module Rails
         File.expand_path(@current, @root.path)
       end
 
+      # 返回子path
+      # 只是按表面上的来返回，事实上，@current只是代表了抽象的路径
+      # 如果指定@paths，它与@current并没有必然的对应关系
       def children
         keys = @root.keys.find_all { |k|
           k.start_with?(@current) && k != @current
@@ -190,11 +209,17 @@ module Rails
         result = []
 
         each do |p|
+          # p为paths的每一个元素
+          # path就是这个元素的绝对路径
           path = File.expand_path(p, @root.path)
-
+          #puts "输出path:#{path}"
           if @glob && File.directory?(path)
             Dir.chdir(path) do
-              result.concat(Dir.glob(@glob).map { |file| File.join path, file }.sort)
+              xx = Dir.glob(@glob).map { |file| File.join path, file }.sort
+              # puts "输出xx"
+              # p xx
+
+              result.concat(xx)
             end
           else
             result << path

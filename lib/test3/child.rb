@@ -1,0 +1,3 @@
+class Child < Parent
+  
+end

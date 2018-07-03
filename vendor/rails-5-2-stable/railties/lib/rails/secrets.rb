@@ -27,8 +27,12 @@ module Rails
           require "erb"
 
           secrets = YAML.load(ERB.new(preprocess(path)).result) || {}
-          all_secrets.merge!(secrets["shared"].deep_symbolize_keys) if secrets["shared"]
-          all_secrets.merge!(secrets[env].deep_symbolize_keys) if secrets[env]
+          if secrets["shared"]
+            all_secrets.merge!(secrets["shared"].deep_symbolize_keys)
+          end
+          if secrets[env]
+            all_secrets.merge!(secrets[env].deep_symbolize_keys)
+          end
         end
       end
 

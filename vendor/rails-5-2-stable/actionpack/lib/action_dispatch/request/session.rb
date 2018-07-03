@@ -89,8 +89,13 @@ module ActionDispatch
       # Returns value of the key stored in the session or
       # +nil+ if the given key is not found in the session.
       def [](key)
+
         load_for_read!
-        @delegate[key.to_s]
+        value = @delegate[key.to_s]
+
+        
+
+        return value
       end
 
       # Returns true if the session has the given key or false.
@@ -115,6 +120,7 @@ module ActionDispatch
 
       # Writes given value to given key of the session.
       def []=(key, value)
+
         load_for_write!
         @delegate[key.to_s] = value
       end
@@ -220,6 +226,7 @@ module ActionDispatch
         def load!
           id, session = @by.load_session @req
           options[:id] = id
+
           @delegate.replace(stringify_keys(session))
           @loaded = true
         end
