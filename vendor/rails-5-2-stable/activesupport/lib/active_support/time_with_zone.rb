@@ -517,7 +517,10 @@ module ActiveSupport
       def get_period_and_ensure_valid_local_time(period)
         # we don't want a Time.local instance enforcing its own DST rules as well,
         # so transfer time values to a utc constructor if necessary
-        @time = transfer_time_values_to_utc_constructor(@time) unless @time.utc?
+        if ! @time.utc?
+          @time = transfer_time_values_to_utc_constructor(@time)
+        end
+
         begin
           period || @time_zone.period_for_local(@time)
         rescue ::TZInfo::PeriodNotFound
@@ -527,10 +530,17 @@ module ActiveSupport
         end
       end
 
+      # 根据time构造一个UTC时间返回
+      # 如果time不是一个utc时间，则以它构造
+      # 这个方法并不是将time转换为utc时间
+      # 它只是用time的年、月、日等构造一个utc时间对象
       def transfer_time_values_to_utc_constructor(time)
         # avoid creating another Time object if possible
-        return time if time.instance_of?(::Time) && time.utc?
-        ::Time.utc(time.year, time.month, time.day, time.hour, time.min, time.sec + time.subsec)
+        if time.instance_of?(::Time) && time.utc?
+          time
+        else
+          ::Time.utc(time.year, time.month, time.day, time.hour, time.min, time.sec + time.subsec)
+        end
       end
 
       def duration_of_variable_length?(obj)

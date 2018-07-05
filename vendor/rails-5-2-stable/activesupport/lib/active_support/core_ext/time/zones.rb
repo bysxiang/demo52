@@ -11,6 +11,7 @@ class Time
 
     # Returns the TimeZone for the current request, if this has been set (via Time.zone=).
     # If <tt>Time.zone</tt> has not been set for the current request, returns the TimeZone specified in <tt>config.time_zone</tt>.
+    # 返回当前请求的时区，如果已通过Time.zone=设置则返回它，否则返回默认时区，它来自config.time_zone
     def zone
       Thread.current[:time_zone] || zone_default
     end
@@ -38,6 +39,8 @@ class Time
     #       end
     #     end
     #   end
+    #
+    # 在请求/线程中设置时区
     def zone=(time_zone)
       Thread.current[:time_zone] = find_zone!(time_zone)
     end
@@ -59,6 +62,8 @@ class Time
     # objects that have already been created, e.g. any model timestamp
     # attributes that have been read before the block will remain in
     # the application's default timezone.
+    #
+    # 允许在一个块中临时改写时区，这不会影响已存在的TimeWithZone对象
     def use_zone(time_zone)
       new_zone = find_zone!(time_zone)
       begin
@@ -79,7 +84,13 @@ class Time
     #   Time.find_zone! nil                # => nil
     #   Time.find_zone! false              # => false
     #   Time.find_zone! "NOT-A-TIMEZONE"   # => ArgumentError: Invalid Timezone: NOT-A-TIMEZONE
+    #
+    # 查找TimeZone对象
     def find_zone!(time_zone)
+      
+      # 如果time_zone为nil或false 或 它是TimeZone对象
+      # 这里的行为值得商榷，按道理来说，time_zone为nil或false时，
+      # 应该抛出异常
       if !time_zone || time_zone.is_a?(ActiveSupport::TimeZone)
         time_zone
       else

@@ -17,24 +17,32 @@ module DateAndTime
     #
     #   Time.utc(2000).in_time_zone('Alaska') # => Fri, 31 Dec 1999 15:00:00 AKST -09:00
     #   Date.new(2000).in_time_zone('Alaska') # => Sat, 01 Jan 2000 00:00:00 AKST -09:00
+    # 
+    # 将时间转换为对应时区的时间, 如果对应时区存在，则转换
+    # 否则返回时间对象(DateTime或Time)
     def in_time_zone(zone = ::Time.zone)
       time_zone = ::Time.find_zone! zone
       time = acts_like?(:time) ? self : nil
 
       if time_zone
         time_with_zone(time, time_zone)
-      else
+      else 
+        # 当zone为nil或false时，返回time或to_time(即当前时间)
         time || to_time
       end
     end
 
     private
 
+      # time 可能是一个Time类也可能是nil
       def time_with_zone(time, zone)
         if time
-          ActiveSupport::TimeWithZone.new(time.utc? ? time : time.getutc, zone)
+          utc_time = time.utc? ? time : time.getutc
+          ActiveSupport::TimeWithZone.new(utc_time, zone)
         else
-          ActiveSupport::TimeWithZone.new(nil, zone, to_time(:utc))
+          # 当前对象为Date时
+          utc_time = to_time(:utc)
+          ActiveSupport::TimeWithZone.new(nil, zone, utc_time)
         end
       end
   end

@@ -27,6 +27,9 @@ module ActiveSupport
   #   Time.zone      # => #<ActiveSupport::TimeZone:0x514834...>
   #   Time.zone.name # => "Eastern Time (US & Canada)"
   #   Time.zone.now  # => Sun, 18 May 2008 14:30:44 EDT -04:00
+  #
+  # 对TZInfo::Timezone的包装
+  # 在这个类中，我只关系它的Time.zone.now方法，它返回当前时区对应的时间
   class TimeZone
     # Keys are Rails TimeZone names, values are TZInfo identifiers.
     MAPPING = {

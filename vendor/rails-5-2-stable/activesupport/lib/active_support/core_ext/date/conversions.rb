@@ -78,9 +78,16 @@ class Date
   #
   # NOTE: The :local timezone is Ruby's *process* timezone, i.e. ENV['TZ'].
   #       If the *application's* timezone is needed, then use +in_time_zone+ instead.
+  #
+  # 转换一个Date为Time对象, 时间为开始的时间：0:00:00
+  # timezone只能是local或utc，默认为local
+  # local时区是ruby处理的时区，要使用应用程序设置的时区，使用in_time_zone方法
   def to_time(form = :local)
-    raise ArgumentError, "Expected :local or :utc, got #{form.inspect}." unless [:local, :utc].include?(form)
-    ::Time.send(form, year, month, day)
+    if ! [:local, :utc].include?(form)
+      raise ArgumentError, "Expected :local or :utc, got #{form.inspect}."
+    else
+      ::Time.send(form, year, month, day)
+    end
   end
 
   silence_redefinition_of_method :xmlschema
