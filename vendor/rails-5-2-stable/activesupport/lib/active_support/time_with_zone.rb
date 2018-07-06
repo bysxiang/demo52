@@ -61,6 +61,8 @@ module ActiveSupport
     end
 
     # Returns a <tt>Time</tt> instance of the simultaneous time in the UTC timezone.
+    # 
+    # 返回utc时间
     def utc
       @utc ||= period.to_utc(@time)
     end
@@ -70,6 +72,8 @@ module ActiveSupport
     alias_method :gmtime, :utc
 
     # Returns the underlying TZInfo::TimezonePeriod.
+    # 
+    # 返回底层的TimezonePeriod对象
     def period
       @period ||= time_zone.period_for_utc(@utc)
     end
