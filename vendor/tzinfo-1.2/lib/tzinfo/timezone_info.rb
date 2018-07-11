@@ -1,5 +1,6 @@
 module TZInfo
   # Represents a timezone defined by a data source.
+  # 表示由数据源定义的时区
   class TimezoneInfo
     
     # The timezone identifier.

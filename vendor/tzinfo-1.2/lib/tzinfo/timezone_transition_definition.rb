@@ -3,6 +3,8 @@ module TZInfo
   # create a DateTime or as both.
   #
   # @private 
+  #
+  # 使用整数时间戳或分数时间戳来构造TimezoneTransition对象
   class TimezoneTransitionDefinition < TimezoneTransition #:nodoc:
     # The numerator of the DateTime if the transition time is defined as a 
     # DateTime, otherwise the transition time as a timestamp.

@@ -32,10 +32,15 @@ module TZInfo
   # retrieved, DateTimes, Times and timestamps can be converted between the UTC 
   # and the local time for the zone. For example:
   #
+  # Timezone是所有时区的基类。它提供了一个工厂方法-get，来通过标识符来访问时区。
+  # 它可以在转换utc、local等时间信息
+  #
   #   tz = TZInfo::Timezone.get('America/New_York')
   #   puts tz.utc_to_local(DateTime.new(2005,8,29,15,35,0)).to_s
   #   puts tz.local_to_utc(Time.utc(2005,8,29,11,35,0)).to_s
   #   puts tz.utc_to_local(1125315300).to_s
+  #
+  # 每个时间转换方法，返回与传入对象相同类型的实例
   #
   # Each time conversion method returns an object of the same type it was 
   # passed.
@@ -78,6 +83,8 @@ module TZInfo
     # "America/Chicago" or "UTC").
     #
     # Raises InvalidTimezoneIdentifier if the timezone couldn't be found.
+    #
+    # 通过一个时区标识符，来获得时区, 它返回Timezone的子类实例
     def self.get(identifier)
       instance = @@loaded_zones[identifier]
       
@@ -108,10 +115,14 @@ module TZInfo
     
     # If identifier is nil calls super(), otherwise calls get. An identfier 
     # should always be passed in when called externally.
+    #
+    # 如果提供了identifier，则通过get方法处理
+    # 否则调用super()
     def self.new(identifier = nil)
       if identifier        
         get(identifier)
       else
+        # 这里super()调用Class#new，以便生成类对象实例
         super()
       end
     end

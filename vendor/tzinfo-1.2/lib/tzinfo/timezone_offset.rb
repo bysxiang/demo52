@@ -1,5 +1,7 @@
 module TZInfo
   # Represents an offset defined in a Timezone data file.
+  #
+  # 时区偏移量
   class TimezoneOffset
     # The base offset of the timezone from UTC in seconds. This does not include
     # any adjustment made for daylight savings time and will typically remain
@@ -59,6 +61,10 @@ module TZInfo
     # the offset of this period.
     #
     # Deprecation warning: this method will be removed in TZInfo version 2.0.0.
+    #
+    # 将UTC时间转换为本地时间
+    #
+    # 此方法将在2.0.0时被移除
     def to_local(utc)
       TimeOrDateTime.wrap(utc) {|wrapped|
         wrapped + @utc_total_offset
@@ -69,6 +75,8 @@ module TZInfo
     # offset of this period.
     #
     # Deprecation warning: this method will be removed in TZInfo version 2.0.0.
+    #
+    # 将本地时间转换为utc时间
     def to_utc(local)
       TimeOrDateTime.wrap(local) {|wrapped|
         wrapped - @utc_total_offset

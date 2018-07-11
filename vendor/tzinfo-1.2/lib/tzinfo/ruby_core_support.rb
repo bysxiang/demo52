@@ -9,7 +9,9 @@ module TZInfo
   module RubyCoreSupport #:nodoc:
   
     # Use Rational.new! for performance reasons in Ruby 1.8.
-    # This has been removed from 1.9, but Rational performs better.        
+    # This has been removed from 1.9, but Rational performs better.     
+    #
+    # 构造一个Rational对象，兼容不同版本   
     if Rational.respond_to? :new!
       def self.rational_new!(numerator, denominator = 1)
         Rational.new!(numerator, denominator)

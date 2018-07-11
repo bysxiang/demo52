@@ -5,6 +5,8 @@ require 'time'
 module TZInfo
   # Used by TZInfo internally to represent either a Time, DateTime or
   # an Integer timestamp (seconds since 1970-01-01 00:00:00).
+  #
+  # 在TZInfo内部用于表示Time、DateTime或时间戳的对象
   class TimeOrDateTime
     include Comparable
     

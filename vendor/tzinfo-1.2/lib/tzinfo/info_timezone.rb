@@ -3,6 +3,8 @@ module TZInfo
   # A Timezone based on a TimezoneInfo.
   #
   # @private
+  #
+  # 基于timezone的info类，提供了info保护方法
   class InfoTimezone < Timezone #:nodoc:
     
     # Constructs a new InfoTimezone with a TimezoneInfo instance.

@@ -23,7 +23,10 @@ module TZInfo
       @end_transition = end_transition
       
       if offset
-        raise ArgumentError, 'Offset specified with transitions' if @start_transition || @end_transition
+        if @start_transition || @end_transition
+          raise ArgumentError, 'Offset specified with transitions'
+        end
+
         @offset = offset
       else
         if @start_transition 
@@ -35,7 +38,7 @@ module TZInfo
         end
       end
       
-      @utc_total_offset_rational = nil      
+      @utc_total_offset_rational = nil
     end
             
     # The base offset of the timezone from UTC in seconds. This does not include

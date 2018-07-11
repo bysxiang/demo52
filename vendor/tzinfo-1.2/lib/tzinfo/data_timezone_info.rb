@@ -1,5 +1,7 @@
 module TZInfo
   # Represents a defined timezone containing transition data.
+  #
+  # 表示包含转换数据的已定义时区信息
   class DataTimezoneInfo < TimezoneInfo  
   
     # Returns the TimezonePeriod for the given UTC time.
@@ -42,6 +44,8 @@ module TZInfo
     
     # Constructs a Timezone instance for the timezone represented by this
     # DataTimezoneInfo.
+    #
+    # 为此表示的时区构造一个Timezone实例
     def create_timezone
       DataTimezone.new(self)
     end

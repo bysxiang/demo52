@@ -1,5 +1,7 @@
 module TZInfo
   # Represents a timezone that is defined as a link or alias to another zone.
+  #
+  # 表示定义为另一个区域的链接或别名的时区
   class LinkedTimezoneInfo < TimezoneInfo
         
     # The zone that provides the data (that this zone is an alias for).

@@ -23,6 +23,8 @@ module TZInfo
     @@default_mutex = Mutex.new
         
     # Returns the currently selected DataSource instance.
+    #
+    # 返回当前选定的数据源实例
     def self.get
       # If a DataSource hasn't been manually set when the first request is
       # made to obtain a DataSource, then a Default data source is created.
@@ -165,6 +167,8 @@ module TZInfo
     
     # Creates a DataSource instance for use as the default. Used if
     # no preference has been specified manually.
+    #
+    # 创建一个默认数据源实例, RubyDataSource实例
     def self.create_default_data_source
       has_tzinfo_data = false
       
