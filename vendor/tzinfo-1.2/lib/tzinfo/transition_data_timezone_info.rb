@@ -76,6 +76,8 @@ module TZInfo
     
     # Returns the TimezonePeriod for the given UTC time.
     # Raises NoOffsetsDefined if no offsets have been defined.
+    #
+    #
     def period_for_utc(utc)
       unless @transitions.empty?
         utc = TimeOrDateTime.wrap(utc)               

@@ -2,7 +2,7 @@ module TZInfo
   # Represents a transition from one timezone offset to another at a particular
   # date and time.
   #
-  # 表示从一个时区转换到另一个时区
+  # 表示从一个时区转换到另一个时区，时区转换类
   class TimezoneTransition
     # The offset this transition changes to (a TimezoneOffset instance).
     attr_reader :offset
@@ -22,16 +22,22 @@ module TZInfo
     
     # A TimeOrDateTime instance representing the UTC time when this transition
     # occurs.
+    #
+    # 当把utc转换时，返回一个TimeOrDateTime对象
     def at
       raise_not_implemented('at')
     end
     
     # The UTC time when this transition occurs, returned as a DateTime instance.
+    #
+    # 返回at.to_date_time
     def datetime
       at.to_datetime
     end
     
     # The UTC time when this transition occurs, returned as a Time instance.
+    #
+    # 返回at.to_time
     def time
       at.to_time
     end
@@ -40,7 +46,7 @@ module TZInfo
     # causes the previous observance to end (calculated from at using 
     # previous_offset).
     #
-    # 结束时间，返回TimeOrDateTime实例
+    # 本地结束时间，返回TimeOrDateTime实例，它将at + @offset.utc_total_offset
     def local_end_at
       # Thread-safety: It is possible that the value of @local_end_at may be
       # calculated multiple times in concurrently executing threads. It is not 
@@ -52,10 +58,11 @@ module TZInfo
         if frozen?
           return result
         end
+        
         @local_end_at = result
+      else
+        @local_end_at
       end
-
-      @local_end_at
     end
     
     # The local time when this transition causes the previous observance to end,
@@ -73,7 +80,7 @@ module TZInfo
     # A TimeOrDateTime instance representing the local time when this transition
     # causes the next observance to start (calculated from at using offset).
     #
-    # 开始时间，返回TimeOrDateTime实例
+    # 本地开始时间，返回TimeOrDateTime实例, 它将at + @offset.utc_total_offset
     def local_start_at
       # Thread-safety: It is possible that the value of @local_start_at may be
       # calculated multiple times in concurrently executing threads. It is not 

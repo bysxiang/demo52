@@ -8,6 +8,7 @@ module TZInfo
   class InfoTimezone < Timezone #:nodoc:
     
     # Constructs a new InfoTimezone with a TimezoneInfo instance.
+    # info是一个TimezoneInfo对象
     def self.new(info)      
       tz = super()
       tz.send(:setup, info)

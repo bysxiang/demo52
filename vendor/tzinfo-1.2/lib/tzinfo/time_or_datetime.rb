@@ -15,11 +15,21 @@ module TZInfo
     # is ignored.
     #
     # Integer timestamps must be within the range supported by Time on the
-    # platform being used.    
+    # platform being used.
+    #
+    # 构造一个新的TimeOrDateTime对象。timeOrDateTime可以是Time、DateTime或数字
+    #。如果提供了一个Time或DateTime，所有的时区信息将被忽略 
+    #
+    # 
     def initialize(timeOrDateTime)
+      # 这3个实例变量标识了此对象时如何被构造的
+      # 如果是传入的Time，则会初始化@time，依次类推
       @time = nil
       @datetime = nil
       @timestamp = nil
+
+      #@orig 表示的对象，它表示最终构造的时间对象，
+      # 例如@time, @datetime, @timestamp
       
       if timeOrDateTime.is_a?(Time)
         @time = timeOrDateTime
@@ -49,20 +59,25 @@ module TZInfo
     #
     # When converting from a DateTime, the result is truncated to microsecond
     # precision.
+    #
+    # 返回一个Time对象，如果不是Time构造的实例，转换为微秒精度
     def to_time
       # Thread-safety: It is possible that the value of @time may be 
       # calculated multiple times in concurrently executing threads. It is not 
       # worth the overhead of locking to ensure that @time is only 
       # calculated once.
     
-      unless @time
-        result = if @timestamp
-          Time.at(@timestamp).utc
+      if ! @time
+        if @timestamp
+          result = Time.at(@timestamp).utc
         else
-          Time.utc(year, mon, mday, hour, min, sec, usec)
+          result = Time.utc(year, mon, mday, hour, min, sec, usec)
         end
 
-        return result if frozen?
+        if frozen?
+          return result
+        end
+
         @time = result
       end
       
@@ -73,18 +88,22 @@ module TZInfo
     #
     # When converting from a Time, the result is truncated to microsecond
     # precision.
+    #
+    # 返回一个DateTime对象，当发生转换得到时，截断为微妙
     def to_datetime
       # Thread-safety: It is possible that the value of @datetime may be 
       # calculated multiple times in concurrently executing threads. It is not 
       # worth the overhead of locking to ensure that @datetime is only 
       # calculated once.
     
-      unless @datetime
+      if ! @datetime
         # Avoid using Rational unless necessary.
         u = usec
         s = u == 0 ? sec : Rational(sec * 1000000 + u, 1000000)
         result = RubyCoreSupport.datetime_new(year, mon, mday, hour, min, s)
-        return result if frozen?
+        if frozen?
+          return result
+        end
         @datetime = result
       end
       
@@ -308,19 +327,17 @@ module TZInfo
       @orig.hash
     end
     
-    # If no block is given, returns a TimeOrDateTime wrapping the given 
-    # timeOrDateTime. If a block is specified, a TimeOrDateTime is constructed
-    # and passed to the block. The result of the block must be a TimeOrDateTime.
+    # 如果没有提供一个块，则返回包装给定的TimeOrDateTime实例。如果指定了块，则构造TimeOrDateTime并传递给
+    # 块，这个块必须返回TimeOrDateTime类型
     #
-    # The result of the block will be converted to the type of the originally 
-    # passed in timeOrDateTime and then returned as the result of wrap.
+    # 结果将转换为原始类型。
     #
-    # timeOrDateTime can be a Time, DateTime, timestamp (Integer) or 
-    # TimeOrDateTime. If a TimeOrDateTime is passed in, no new TimeOrDateTime 
-    # will be constructed and the value passed to wrap will be used when 
-    # calling the block.
-    def self.wrap(timeOrDateTime)      
-      t = timeOrDateTime.is_a?(TimeOrDateTime) ? timeOrDateTime : TimeOrDateTime.new(timeOrDateTime)        
+    # 参数timeOrDateTime可以是TimeOrDateTime、Time、DateTime或时间戳。如果传入的是TimeOrDateTime，不会构造新的
+    # 对象，否则将构造一个新的，并根据传入的类型，最终返回原类型
+    #
+    # 备注：那么这个方法的行为就很清晰了，它去除时区信息，如果是Time、DateTime，将被表示成UTC时间(即不考虑它的时区)
+    def self.wrap(timeOrDateTime)
+      t = timeOrDateTime.is_a?(TimeOrDateTime) ? timeOrDateTime : TimeOrDateTime.new(timeOrDateTime)
       
       if block_given?
         t = yield t
@@ -337,6 +354,8 @@ module TZInfo
       else
         t
       end
-    end
+    end # self.wrap .. end
+
+
   end
 end

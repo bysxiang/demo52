@@ -1,49 +1,42 @@
 module TZInfo
   # Represents an offset defined in a Timezone data file.
   #
-  # 时区偏移量
+  # 时区偏移量类，主要实现了to_local, to_utc方法
+  # 它描述了相对于UTC的偏移量，夏令时的偏移量
   class TimezoneOffset
-    # The base offset of the timezone from UTC in seconds. This does not include
-    # any adjustment made for daylight savings time and will typically remain
-    # constant throughout the year.
+    # 时区相对于utc时间的偏移量，它不包括夏令时的时间调整。它保持全年不变
     #
-    # To obtain the currently observed offset from UTC, including the effect of
-    # daylight savings time, use utc_total_offset instead.
+    # 获得当前从utc观察到的偏移量，包括夏令时的影响，使用utc_total_offset
     #
-    # Note that zoneinfo files only include the value of utc_total_offset and a
-    # DST flag. When using ZoneinfoDataSource, the utc_offset will be derived
-    # from changes to the UTC total offset and the DST flag. As a consequence,
-    # utc_total_offset will always be correct, but utc_offset may be inaccurate.
+    # 请注意时区文件只包含utc_total_offset和一个DST标识位。使用ZoneinfoDataSource时，
+    # 将从utc_total_offset和DST标识位中派生出utc_offset。utc_total_offset将始终正确，
+    # 而utc_offset可能不准确
     #
-    # If you require utc_offset to be accurate, install the tzinfo-data gem and
-    # set RubyDataSource as the DataSource.
+    # 如果你想要utc_offset准确，请按照tzinfo-data gem，并将RubyDataSource设置为DataSource
+    # 
     attr_reader :utc_offset
     
-    # The offset from the time zone's standard time in seconds. Zero
-    # when daylight savings time is not in effect. Non-zero (usually 3600 = 1
-    # hour) if daylight savings is being observed.
+    # 这个偏移量是以秒为单位的偏移量。当为0时，表示夏令时不起作用。非零表示
+    # 夏令时(通常3600等于1小时).
     #
-    # Note that zoneinfo files only include the value of utc_total_offset and
-    # a DST flag. When using DataSources::ZoneinfoDataSource, the std_offset
-    # will be derived from changes to the UTC total offset and the DST flag. As
-    # a consequence, utc_total_offset will always be correct, but std_offset
-    # may be inaccurate.
-    #
-    # If you require std_offset to be accurate, install the tzinfo-data gem
-    # and set RubyDataSource as the DataSource.
+    # 请注意，zoninfo文件只包含utc_total_offset和一个DST标识位。当使用DataSources::ZoneinfoDataSource
+    # 时，将从utc_total_offset和DST标识位中派生出utc_offset。utc_total_offset将始终正确，
+    # 而utc_offset可能不准确
+    # 
+    # 如果你想要utc_offset准确，请按照tzinfo-data gem，并将RubyDataSource设置为DataSource
     attr_reader :std_offset
     
     # The total offset of this observance from UTC in seconds 
     # (utc_offset + std_offset).
     attr_reader :utc_total_offset
     
-    # The abbreviation that identifies this observance, e.g. "GMT" 
-    # (Greenwich Mean Time) or "BST" (British Summer Time) for "Europe/London". The returned identifier is a 
-    # symbol.
+    # 标识这个惯例的缩写。 例如："GMT"(格林威治时间)或"BST"(欧洲/伦敦时间)。它返回标识符符号。
     attr_reader :abbreviation
     
     # Constructs a new TimezoneOffset. utc_offset and std_offset are specified 
     # in seconds.
+    #
+    # 构造一个新的TimezoneOffset实例，utc_offset和std_offset都是秒
     def initialize(utc_offset, std_offset, abbreviation)
       @utc_offset = utc_offset
       @std_offset = std_offset      

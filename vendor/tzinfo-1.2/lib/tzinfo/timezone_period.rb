@@ -3,16 +3,26 @@ module TZInfo
   #
   # All the methods that take times accept instances of Time or DateTime as well
   # as Integer timestamps.
+  #
+  # 时区中与UTC相同偏移的时间段。
+  #
+  # 所有使用time的方法都能接受Time、DateTime实例的证书时间戳。
   class TimezonePeriod
     # The TimezoneTransition that defines the start of this TimezonePeriod 
     # (may be nil if unbounded).
+    # 
+    # 表示开始，如果为nil，则未定义
     attr_reader :start_transition
     
     # The TimezoneTransition that defines the end of this TimezonePeriod
     # (may be nil if unbounded).
+    #
+    # 表示结束，如果为nil，则未定义
     attr_reader :end_transition
     
     # The TimezoneOffset for this period.
+    # 
+    # 此对象的TimezoneOffset对象
     attr_reader :offset
     
     # Initializes a new TimezonePeriod.

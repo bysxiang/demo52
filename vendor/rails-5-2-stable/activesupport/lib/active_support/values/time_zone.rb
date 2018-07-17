@@ -4,7 +4,7 @@ require "tzinfo"
 require "concurrent/map"
 require "active_support/core_ext/object/blank"
 
-module ActiveSupport
+module ActiveSupport 
   # The TimeZone class serves as a wrapper around TZInfo::Timezone instances.
   # It allows us to do the following:
   #
@@ -29,7 +29,7 @@ module ActiveSupport
   #   Time.zone.now  # => Sun, 18 May 2008 14:30:44 EDT -04:00
   #
   # 对TZInfo::Timezone的包装
-  # 在这个类中，我只关系它的Time.zone.now方法，它返回当前时区对应的时间
+  # 在这个类中，我只关心它的Time.zone.now方法，它返回当前时区对应的时间
   class TimeZone
     # Keys are Rails TimeZone names, values are TZInfo identifiers.
     MAPPING = {
@@ -477,6 +477,8 @@ module ActiveSupport
     #
     #   Time.zone = 'Hawaii'  # => "Hawaii"
     #   Time.zone.now         # => Wed, 23 Jan 2008 20:24:27 HST -10:00
+    #
+    # 返回一个AcctiveSupport::TimeWithZone实例，它呈现当前时区的时间
     def now
       time_now.utc.in_time_zone(self)
     end

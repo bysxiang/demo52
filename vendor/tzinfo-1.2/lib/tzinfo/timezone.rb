@@ -427,6 +427,9 @@ module TZInfo
     # a DateTime, Time or timestamp (Time.to_i). The returned time has the same
     # type as utc. Any timezone information in utc is ignored (it is treated as 
     # a UTC time).
+    #
+    # 将一个UTC时间转换到本地时区时间。utc参数可以是DateTime、Time或时间戳(Time.to_i)。
+    # 返回类型与utc类型一致。参数utc的任何时区都被忽略(它被视为utc时间)。
     def utc_to_local(utc)
       TimeOrDateTime.wrap(utc) {|wrapped|
         period_for_utc(wrapped).to_local(wrapped)
