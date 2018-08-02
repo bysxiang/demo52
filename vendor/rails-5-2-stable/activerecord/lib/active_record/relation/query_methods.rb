@@ -10,22 +10,23 @@ module ActiveRecord
   module QueryMethods
     extend ActiveSupport::Concern
 
+    # 用于检查params是否permit
     include ActiveModel::ForbiddenAttributesProtection
 
-    # WhereChain objects act as placeholder for queries in which #where does not have any parameter.
-    # In this case, #where must be chained with #not to return a new relation.
+    # WhereChain对象充当#where没有参数时的查询占位符。在这种情况下，#where必须链式调用#not以返回新的relation
+    # 对象
+    # 这个类专门处理where not的
     class WhereChain
       include ActiveModel::ForbiddenAttributesProtection
 
+      # scope通常是Relation实例的副本
       def initialize(scope)
         @scope = scope
       end
 
-      # Returns a new relation expressing WHERE + NOT condition according to
-      # the conditions in the arguments.
+      # 返回一个表示where not条件的新关系
       #
-      # #not accepts conditions as a string, array, or hash. See QueryMethods#where for
-      # more details on each format.
+      # #not接收的条件可以是一个String, array或hash。详见 QueryMethods#where 格式部分。
       #
       #    User.where.not("name = 'Jon'")
       #    # SELECT * FROM users WHERE NOT (name = 'Jon')
@@ -53,7 +54,7 @@ module ActiveRecord
         @scope.where_clause += where_clause.invert
         @scope
       end
-    end
+    end # class WhereChain .. end
 
     FROZEN_EMPTY_ARRAY = [].freeze
     FROZEN_EMPTY_HASH = {}.freeze
@@ -78,44 +79,42 @@ module ActiveRecord
 
     alias extensions extending_values
 
-    # Specify relationships to be included in the result set. For
-    # example:
+    # 指定要包含在结果集中的关系. 
+    # 例子：
     #
     #   users = User.includes(:address)
     #   users.each do |user|
     #     user.address.city
     #   end
     #
-    # allows you to access the +address+ attribute of the +User+ model without
-    # firing an additional query. This will often result in a
-    # performance improvement over a simple join.
+    # 允许你访问User模型的address属性，而不会触发其他查询。与简单的join相比，这回带来
+    # 性能提升
     #
-    # You can also specify multiple relationships, like this:
+    # 你也可以指定多个关系，像这样：
     #
     #   users = User.includes(:address, :friends)
     #
-    # Loading nested relationships is possible using a Hash:
+    # 使用Hash可以加载嵌套关系：
     #
     #   users = User.includes(:address, friends: [:address, :followers])
     #
     # === conditions
     #
-    # If you want to add conditions to your included models you'll have
-    # to explicitly reference them. For example:
+    # 如果你想为included的模型添加条件，你需要明确的引用它们。例子：
     #
     #   User.includes(:posts).where('posts.name = ?', 'example')
     #
-    # Will throw an error, but this will work:
+    # 会抛出错误，但这会有效：
     #
     #   User.includes(:posts).where('posts.name = ?', 'example').references(:posts)
-    #
-    # Note that #includes works with association names while #references needs
-    # the actual table name.
+    # 
+    # 请注意，#includes与#references需要使用关联名称 - 实际的表名
     def includes(*args)
       check_if_method_has_arguments!(:includes, args)
       spawn.includes!(*args)
     end
 
+    # 将表名数组添加到self.includes_values中
     def includes!(*args) # :nodoc:
       args.reject!(&:blank?)
       args.flatten!
@@ -124,7 +123,7 @@ module ActiveRecord
       self
     end
 
-    # Forces eager loading by performing a LEFT OUTER JOIN on +args+:
+    # 通过在+args+上执行left outer join强制执行加载：
     #
     #   User.eager_load(:posts)
     #   # SELECT "users"."id" AS t0_r0, "users"."name" AS t0_r1, ...
@@ -140,7 +139,7 @@ module ActiveRecord
       self
     end
 
-    # Allows preloading of +args+, in the same way that #includes does:
+    # 允许预加载+args+，与+includes+一样
     #
     #   User.preload(:posts)
     #   # SELECT "posts".* FROM "posts" WHERE "posts"."user_id" IN (1, 2, 3)
@@ -154,21 +153,20 @@ module ActiveRecord
       self
     end
 
-    # Use to indicate that the given +table_names+ are referenced by an SQL string,
-    # and should therefore be JOINed in any query rather than loaded separately.
-    # This method only works in conjunction with #includes.
-    # See #includes for more details.
+    # 用于指示给定的+table_names+由sql字符串引用，因此应该在任何查询中加入而不是单独加载。
+    # 此方法仅与+includes+一起使用。有关详细信息，请参阅#includes。
     #
     #   User.includes(:posts).where("posts.name = 'foo'")
-    #   # Doesn't JOIN the posts table, resulting in an error.
+    #   # 不会join posts表，所以它会导致错误。
     #
     #   User.includes(:posts).where("posts.name = 'foo'").references(:posts)
-    #   # Query now knows the string references posts, so adds a JOIN
+    #   # 查询现在知道引用了posts表，所以它添加了JOIN关联。
     def references(*table_names)
       check_if_method_has_arguments!(:references, table_names)
       spawn.references!(*table_names)
     end
 
+    # 将表添加到self.references_values
     def references!(*table_names) # :nodoc:
       table_names.flatten!
       table_names.map!(&:to_s)
@@ -177,43 +175,39 @@ module ActiveRecord
       self
     end
 
-    # Works in two unique ways.
+    # 以两种不同额方式工作。
     #
-    # First: takes a block so it can be used just like <tt>Array#select</tt>.
+    # 首先：使用一个块，这样它就可以像<tt>Array#select</tt>一样使用。
     #
     #   Model.all.select { |m| m.field == value }
     #
-    # This will build an array of objects from the database for the scope,
-    # converting them into an array and iterating through them using
+    # 这将从数据库中为作用域构建一个对象数组，把将它转换为数组并使用它们迭代它们使用
     # <tt>Array#select</tt>.
     #
-    # Second: Modifies the SELECT statement for the query so that only certain
-    # fields are retrieved:
+    # 第二：修改查询的select语句，以便只确定字段被检索：
     #
     #   Model.select(:field)
     #   # => [#<Model id: nil, field: "value">]
     #
-    # Although in the above example it looks as though this method returns an
-    # array, it actually returns a relation object and can have other query
-    # methods appended to it, such as the other methods in ActiveRecord::QueryMethods.
+    # 虽然在上面的例子中看起来好像这个方法返回了一个数组，它实际上返回了一个relation对象，可以有其他
+    # 附加的查询方法，例如ActiveRecord::QueryMethods中的其他查询方法。
     #
-    # The argument to the method can also be an array of fields.
+    # 参数可以是字段数组。可变长度参数
     #
     #   Model.select(:field, :other_field, :and_one_more)
     #   # => [#<Model id: nil, field: "value", other_field: "value", and_one_more: "value">]
     #
-    # You can also use one or more strings, which will be used unchanged as SELECT fields.
+    # 你还可以使用一个或多个字符串，这些字符串将作为select参数保持不变。
     #
     #   Model.select('field AS field_one', 'other_field AS field_two')
     #   # => [#<Model id: nil, field: "value", other_field: "value">]
     #
-    # If an alias was specified, it will be accessible from the resulting objects:
+    # 如果指定了别名，则可以从结果对象访问它：
     #
     #   Model.select('field AS field_one').first.field_one
     #   # => "value"
     #
-    # Accessing attributes of an object that do not have fields retrieved by a select
-    # except +id+ will throw ActiveModel::MissingAttributeError:
+    # 访问没有select选择的字段对象的属性，除了id外，都将抛出ActiveModel::MissingAttributeError 异常
     #
     #   Model.select(:field).first.other_field
     #   # => ActiveModel::MissingAttributeError: missing attribute: other_field
@@ -224,10 +218,13 @@ module ActiveRecord
         end
 
         return super()
-      end
+      else
+        if fields.empty?
+          raise ArgumentError, "Call `select' with at least one field"
+        end
 
-      raise ArgumentError, "Call `select' with at least one field" if fields.empty?
-      spawn._select!(*fields)
+        spawn._select!(*fields)
+      end
     end
 
     def _select!(*fields) # :nodoc:
@@ -239,12 +236,12 @@ module ActiveRecord
       self
     end
 
-    # Allows to specify a group attribute:
+    # 允许指定一个分组属性：
     #
     #   User.group(:name)
     #   # SELECT "users".* FROM "users" GROUP BY name
     #
-    # Returns an array with distinct records based on the +group+ attribute:
+    # 返回一个基于group属性分组的具有不同记录的数组
     #
     #   User.select([:id, :name])
     #   # => [#<User id: 1, name: "Oscar">, #<User id: 2, name: "Oscar">, #<User id: 3, name: "Foo">]
@@ -255,7 +252,7 @@ module ActiveRecord
     #   User.group('name AS grouped_name, age')
     #   # => [#<User id: 3, name: "Foo", age: 21, ...>, #<User id: 2, name: "Oscar", age: 21, ...>, #<User id: 5, name: "Foo", age: 23, ...>]
     #
-    # Passing in an array of attributes to group by is also supported.
+    # 支持将一组属性传递给group by
     #
     #   User.select([:id, :first_name]).group(:id, :first_name).first(3)
     #   # => [#<User id: 1, first_name: "Bill">, #<User id: 2, first_name: "Earl">, #<User id: 3, first_name: "Beto">]
@@ -271,7 +268,7 @@ module ActiveRecord
       self
     end
 
-    # Allows to specify an order attribute:
+    # 允许你指定order属性：
     #
     #   User.order(:name)
     #   # SELECT "users".* FROM "users" ORDER BY "users"."name" ASC
@@ -295,29 +292,30 @@ module ActiveRecord
       spawn.order!(*args)
     end
 
-    # Same as #order but operates on relation in-place instead of copying.
+    # 与#order一样，但在relation上操作而不是复制
+    # 多个order调用，会合并在一起，组成order多个字段
     def order!(*args) # :nodoc:
       preprocess_order_args(args)
 
-      self.order_values += args
+      self.order_values += args1
       self
     end
 
-    # Replaces any existing order defined on the relation with the specified order.
+    # 替换已存在的order定义。
     #
     #   User.order('email DESC').reorder('id ASC') # generated SQL has 'ORDER BY id ASC'
     #
-    # Subsequent calls to order on the same relation will be appended. For example:
-    #
+    # 随后将对相同关系的order进行追加。例如：
+    # 
     #   User.order('email DESC').reorder('id ASC').order('name ASC')
     #
-    # generates a query with 'ORDER BY id ASC, name ASC'.
+    # 生成查询如 'ORDER BY id ASC, name ASC'.
     def reorder(*args)
       check_if_method_has_arguments!(:reorder, args)
       spawn.reorder!(*args)
     end
 
-    # Same as #reorder but operates on relation in-place instead of copying.
+    # 与#reorder不同，它是在relation对象上运行而不是复制
     def reorder!(*args) # :nodoc:
       preprocess_order_args(args)
 
@@ -330,22 +328,19 @@ module ActiveRecord
                                      :limit, :offset, :joins, :left_outer_joins,
                                      :includes, :from, :readonly, :having])
 
-    # Removes an unwanted relation that is already defined on a chain of relations.
-    # This is useful when passing around chains of relations and would like to
-    # modify the relations without reconstructing the entire chain.
+    # 删除已在关系链上定义的不需要的关系。当传递关系链并且想要时，这很有用，修改关系而不是
+    # 删除重建。
     #
     #   User.order('email DESC').unscope(:order) == User.all
     #
-    # The method arguments are symbols which correspond to the names of the methods
-    # which should be unscoped. The valid arguments are given in VALID_UNSCOPING_VALUES.
-    # The method can also be called with multiple arguments. For example:
+    # 方法参数时对应于方法名称的符号，有效参数在VALID_UNSCOPING_VALUES中给出。也可以使用多个参数
+    # 调用此方法。
     #
     #   User.order('email DESC').select('id').where(name: "John")
     #       .unscope(:order, :select, :where) == User.all
     #
-    # One can additionally pass a hash as an argument to unscope specific +:where+ values.
-    # This is done by passing a hash with a single key-value pair. The key should be
-    # +:where+ and the value should be the where value to unscope. For example:
+    # 还可以将散列作为参数传递给unscope指定+:where+的具体值。这是通过传递具有单个键值对的散列来完成的。
+    # 关键之键值对是应该unscope的。例如：
     #
     #   User.where(name: "John", active: true).unscope(where: :name)
     #       == User.where(active: true)
@@ -397,8 +392,7 @@ module ActiveRecord
       self
     end
 
-    # Performs a joins on +args+. The given symbol(s) should match the name of
-    # the association(s).
+    # 在+args+参数上执行join。给定的符号比U匹配一个关联的名称。 
     #
     #   User.joins(:posts)
     #   # SELECT "users".*
@@ -422,7 +416,7 @@ module ActiveRecord
     #   # INNER JOIN "comments" "comments_posts"
     #   #   ON "comments_posts"."post_id" = "posts"."id"
     #
-    # You can use strings in order to customize your joins:
+    # 你能够使用字符串来自定义join:
     #
     #   User.joins("LEFT JOIN bookmarks ON bookmarks.bookmarkable_type = 'Post' AND bookmarks.user_id = users.id")
     #   # SELECT "users".* FROM "users" LEFT JOIN bookmarks ON bookmarks.bookmarkable_type = 'Post' AND bookmarks.user_id = users.id
@@ -438,7 +432,7 @@ module ActiveRecord
       self
     end
 
-    # Performs a left outer joins on +args+:
+    # 执行一个左外连接
     #
     #   User.left_outer_joins(:posts)
     #   => SELECT "users".* FROM "users" LEFT OUTER JOIN "posts" ON "posts"."user_id" = "users"."id"
@@ -456,71 +450,56 @@ module ActiveRecord
       self
     end
 
-    # Returns a new relation, which is the result of filtering the current relation
-    # according to the conditions in the arguments.
+    # 返回一个关系对象，这是根据条件过滤后的结果
     #
-    # #where accepts conditions in one of several formats. In the examples below, the resulting
-    # SQL is given as an illustration; the actual query generated may be different depending
-    # on the database adapter.
+    # #where接收多种格式的条件。在下面的例子中，结果给我了一个说明。不同的适配器查询可能不同。
     #
     # === string
     #
-    # A single string, without additional arguments, is passed to the query
-    # constructor as an SQL fragment, and used in the where clause of the query.
+    # 没有附加参数的单个字符串传递给查询。作为SQL片段的构造函数，并在查询的where子句中使用。
     #
     #    Client.where("orders_count = '2'")
     #    # SELECT * from clients where orders_count = '2';
     #
-    # Note that building your own string from user input may expose your application
-    # to injection attacks if not done properly. As an alternative, it is recommended
-    # to use one of the following methods.
+    # 注意，从用户输入的构建自己的字符串可能会暴露给应用程序。如果没有正确地进行防注入攻击。作为
+    # 另一种选择，建议使用下列方法之一。
     #
     # === array
     #
-    # If an array is passed, then the first element of the array is treated as a template, and
-    # the remaining elements are inserted into the template to generate the condition.
-    # Active Record takes care of building the query to avoid injection attacks, and will
-    # convert from the ruby type to the database type where needed. Elements are inserted
-    # into the string in the order in which they appear.
+    # 如果传递数组，则将数组的第一个元素视为模板，将其余元素插入到模板中以生成条件。
+    # ActiveRecord负责构建查询以避免注入攻击，并将Ruby类型转换到需要的数据库类型，
+    # 插入元素按它们出现的顺序排列到字符串中。
     #
     #   User.where(["name = ? and email = ?", "Joe", "joe@example.com"])
     #   # SELECT * FROM users WHERE name = 'Joe' AND email = 'joe@example.com';
     #
-    # Alternatively, you can use named placeholders in the template, and pass a hash as the
-    # second element of the array. The names in the template are replaced with the corresponding
-    # values from the hash.
+    # 或者，你可以在模板中使用命名占位符，并将Hash传递为第二个元素。模板中的名称用相应的名称替换。
     #
     #   User.where(["name = :name and email = :email", { name: "Joe", email: "joe@example.com" }])
     #   # SELECT * FROM users WHERE name = 'Joe' AND email = 'joe@example.com';
     #
-    # This can make for more readable code in complex queries.
+    # 这可以在复杂查询中产生更多可读代码。
     #
-    # Lastly, you can use sprintf-style % escapes in the template. This works slightly differently
-    # than the previous methods; you are responsible for ensuring that the values in the template
-    # are properly quoted. The values are passed to the connector for quoting, but the caller
-    # is responsible for ensuring they are enclosed in quotes in the resulting SQL. After quoting,
-    # the values are inserted using the same escapes as the Ruby core method +Kernel::sprintf+.
+    # 最后，可以在模板中使用sprintf风格的模板。这有点儿不同，与以前的方法相比，您负责确保模板中的值正确引用，
+    # 这些值传递给连接器用于引用，但调用方负责确保它们包含在生成的sql中的引文中。引用后，使用Kernel::sprintf
+    # 转义插入值。 所以%d将生成数字，最终生成值，调用方自己确保
     #
     #   User.where(["name = '%s' and email = '%s'", "Joe", "joe@example.com"])
     #   # SELECT * FROM users WHERE name = 'Joe' AND email = 'joe@example.com';
     #
-    # If #where is called with multiple arguments, these are treated as if they were passed as
-    # the elements of a single array.
+    # 如果用多个参数调用，则将它们视为单个数组的元素。
     #
     #   User.where("name = :name and email = :email", { name: "Joe", email: "joe@example.com" })
     #   # SELECT * FROM users WHERE name = 'Joe' AND email = 'joe@example.com';
     #
-    # When using strings to specify conditions, you can use any operator available from
-    # the database. While this provides the most flexibility, you can also unintentionally introduce
-    # dependencies on the underlying database. If your code is intended for general consumption,
-    # test with multiple database backends.
+    # 当使用字符串指定条件时，可以使用任何数据库中的操作符。虽然这很灵活，但这也会在无意之间引入与数据库的依赖
+    # 关系。如果您的代码是面向消费者的，使用多个数据库后端进行测试。
     #
     # === hash
     #
-    # #where will also accept a hash condition, in which the keys are fields and the values
-    # are values to be searched for.
+    # #where也接收hash条件，键是字段而值时要搜索的值。
     #
-    # Fields can be symbols or strings. Values can be single values, arrays, or ranges.
+    # 字段可以是符号或字符串。值可以是单个值，数组或范围。
     #
     #    User.where({ name: "Joe", email: "joe@example.com" })
     #    # SELECT * FROM users WHERE name = 'Joe' AND email = 'joe@example.com'
@@ -531,50 +510,48 @@ module ActiveRecord
     #    User.where({ created_at: (Time.now.midnight - 1.day)..Time.now.midnight })
     #    # SELECT * FROM users WHERE (created_at BETWEEN '2012-06-09 07:00:00.000000' AND '2012-06-10 07:00:00.000000')
     #
-    # In the case of a belongs_to relationship, an association key can be used
-    # to specify the model if an ActiveRecord object is used as the value.
+    # 在belongs_to关系的情况下，可以将值指定为模型名称，它会自动转换。
     #
     #    author = Author.find(1)
     #
-    #    # The following queries will be equivalent:
+    #    # 以下查询是等效的
     #    Post.where(author: author)
     #    Post.where(author_id: author)
     #
-    # This also works with polymorphic belongs_to relationships:
+    # 这也适用于多态的belongs_to关联：
     #
     #    treasure = Treasure.create(name: 'gold coins')
     #    treasure.price_estimates << PriceEstimate.create(price: 125)
     #
-    #    # The following queries will be equivalent:
+    #    # 以下查询将是等效的
     #    PriceEstimate.where(estimate_of: treasure)
     #    PriceEstimate.where(estimate_of_type: 'Treasure', estimate_of_id: treasure)
     #
     # === Joins
     #
-    # If the relation is the result of a join, you may create a condition which uses any of the
-    # tables in the join. For string and array conditions, use the table name in the condition.
+    # 如果关系是join的结果，则可以创建任何使用创建连接的条件的表。对于字符串和数组条件，请在条件中使用
+    # 表名。
     #
     #    User.joins(:posts).where("posts.created_at < ?", Time.now)
     #
-    # For hash conditions, you can either use the table name in the key, or use a sub-hash.
+    # 对于Hash条件，你可以使用表名，也可以使用子哈希
     #
     #    User.joins(:posts).where({ "posts.published" => true })
     #    User.joins(:posts).where({ posts: { published: true } })
     #
     # === no argument
-    #
-    # If no argument is passed, #where returns a new instance of WhereChain, that
-    # can be chained with #not to return a new relation that negates the where clause.
+    # 
+    # 如果没有传递任何参数, 此方法将返回一个WhereChain实例，可以链式调用#not以返回一个否则
+    # where子句的关系对象
     #
     #    User.where.not(name: "Jon")
     #    # SELECT * FROM users WHERE name != 'Jon'
     #
-    # See WhereChain for more details on #not.
+    # 更多详细信息详见 WhereChain #not 方法.
     #
     # === blank condition
     #
-    # If the condition is any blank-ish object, then #where is a no-op and returns
-    # the current relation.
+    # 如果条件是空白对象，则#where方法不做操作返回当前relation对象
     def where(opts = :chain, *rest)
       if :chain == opts
         WhereChain.new(spawn)
@@ -592,7 +569,7 @@ module ActiveRecord
       self
     end
 
-    # Allows you to change a previously set where condition for a given attribute, instead of appending to that condition.
+    # 允许用现在的给定属性条件覆盖先前的where给定属性
     #
     #   Post.where(trashed: true).where(trashed: false)
     #   # WHERE `trashed` = 1 AND `trashed` = 0
@@ -603,18 +580,15 @@ module ActiveRecord
     #   Post.where(active: true).where(trashed: true).rewhere(trashed: false)
     #   # WHERE `active` = 1 AND `trashed` = 0
     #
-    # This is short-hand for <tt>unscope(where: conditions.keys).where(conditions)</tt>.
-    # Note that unlike reorder, we're only unscoping the named conditions -- not the entire where statement.
+    # 这是unscope().where的简写形式。与reorder不同，我们只是取消了指定字段的条件-而不是整个where语句。
     def rewhere(conditions)
       unscope(where: conditions.keys).where(conditions)
     end
 
-    # Returns a new relation, which is the logical union of this relation and the one passed as an
-    # argument.
+    # 返回一个新的relation，它是这个relation与传递的relation的逻辑结合。
     #
-    # The two relations must be structurally compatible: they must be scoping the same model, and
-    # they must differ only by #where (if no #group has been defined) or #having (if a #group is
-    # present). Neither relation may have a #limit, #offset, or #distinct set.
+    # 这两种relation必须在结构上兼容：必须是一个模型，必须只根据where(如果没有定义#group)或只使用having(如果定义了
+    # #group)。这两个relation 没有使用#limit, #offset或distinct集合。
     #
     #    Post.where("id = 1").or(Post.where("author_id = 3"))
     #    # SELECT `posts`.* FROM `posts` WHERE ((id = 1) OR (author_id = 3))
@@ -641,8 +615,7 @@ module ActiveRecord
       self
     end
 
-    # Allows to specify a HAVING clause. Note that you can't use HAVING
-    # without also specifying a GROUP clause.
+    # 允许指定HAVING子句。注意，使用它必须同时使用GROUP子句。
     #
     #   Order.having('SUM(price) > 30').group('user_id')
     def having(opts, *rest)
@@ -657,7 +630,7 @@ module ActiveRecord
       self
     end
 
-    # Specifies a limit for the number of records to retrieve.
+    # 指定要检索记录数量的语句。
     #
     #   User.limit(10) # generated SQL has 'LIMIT 10'
     #
@@ -671,11 +644,11 @@ module ActiveRecord
       self
     end
 
-    # Specifies the number of rows to skip before returning rows.
+    # 指定在返回之前跳过的行数。
     #
     #   User.offset(10) # generated SQL has "OFFSET 10"
     #
-    # Should be used with order.
+    # 应该与order一起使用。
     #
     #   User.offset(10).order("name ASC")
     def offset(value)
@@ -687,8 +660,7 @@ module ActiveRecord
       self
     end
 
-    # Specifies locking settings (default to +true+). For more information
-    # on locking, please see ActiveRecord::Locking.
+    # 指定锁定设置。更多信息，查看ActiveRecord::Locking.
     def lock(locks = true)
       spawn.lock!(locks)
     end
@@ -704,22 +676,19 @@ module ActiveRecord
       self
     end
 
-    # Returns a chainable relation with zero records.
+    # 返回一个具有0条记录的可链式操作的relation对象。
     #
-    # The returned relation implements the Null Object pattern. It is an
-    # object with defined null behavior and always returns an empty array of
-    # records without querying the database.
+    # 返回的relation对象实现Null对象模式。它是一个对象，具有定义的null行为并返回一个
+    # 空数组，不查询数据库记录。
     #
-    # Any subsequent condition chained to the returned relation will continue
-    # generating an empty relation and will not fire any query to the database.
+    # 链接到空关系的对象上的任何条件将继续产生空关系对象，不会向数据库发出任何查询。
     #
-    # Used in cases where a method or scope could return zero records but the
-    # result needs to be chainable.
+    # 它适用于方法或scope返回空对象但需要结果是可链式操作。
     #
     # For example:
     #
     #   @posts = current_user.visible_posts.where(name: params[:name])
-    #   # the visible_posts method is expected to return a chainable Relation
+    #   # 这个visible_posts应该返回一个可链式操作的Relation对象
     #
     #   def visible_posts
     #     case role
@@ -740,8 +709,7 @@ module ActiveRecord
       where!("1=0").extending!(NullRelation)
     end
 
-    # Sets readonly attributes for the returned relation. If value is
-    # true (default), attempting to update a record will result in an error.
+    # 为返回的关系设置只读属性。如果value为true(默认值)，尝试更新记录将导致错误。
     #
     #   users = User.readonly
     #   users.first.save
@@ -758,13 +726,15 @@ module ActiveRecord
     # Sets attributes to be used when creating new records from a
     # relation object.
     #
+    # 为从一个新对象中创建relation对象设置属性
+    #
     #   users = User.where(name: 'Oscar')
     #   users.new.name # => 'Oscar'
     #
     #   users = users.create_with(name: 'DHH')
     #   users.new.name # => 'DHH'
     #
-    # You can pass +nil+ to #create_with to reset attributes:
+    # 你可以给#create_with传递+nil+重置属性：
     #
     #   users = users.create_with(nil)
     #   users.new.name # => 'Oscar'
@@ -784,11 +754,13 @@ module ActiveRecord
     end
 
     # Specifies table from which the records will be fetched. For example:
+    # 即指定子查询的from。
+    # 指定将从中获取记录的表。例如：
     #
     #   Topic.select('title').from('posts')
-    #   # SELECT title FROM posts
+    #   # SELECT title FROM post
     #
-    # Can accept other relation objects. For example:
+    # 可以接受其他关系对象。例如：
     #
     #   Topic.select('title').from(Topic.approved)
     #   # SELECT title FROM (SELECT * FROM topics WHERE approved = 't') subquery
@@ -805,32 +777,31 @@ module ActiveRecord
       self
     end
 
-    # Specifies whether the records should be unique or not. For example:
+    # 指定记录是否应该是唯一的。例如：
     #
     #   User.select(:name)
-    #   # Might return two records with the same name
+    #   # 可能返回两个同名记录
     #
     #   User.select(:name).distinct
-    #   # Returns 1 record per distinct name
+    #   # 每个不同名称返回一条记录
     #
     #   User.select(:name).distinct.distinct(false)
-    #   # You can also remove the uniqueness
+    #   # 你可以删除唯一性
     def distinct(value = true)
       spawn.distinct!(value)
     end
 
-    # Like #distinct, but modifies relation in place.
+    # 与#distinct不同，在对象上修改。
     def distinct!(value = true) # :nodoc:
       self.distinct_value = value
       self
     end
 
-    # Used to extend a scope with additional methods, either through
-    # a module or through a block provided.
+    #用于通道一个模块或一个块为scope添加一些方法。
     #
-    # The object returned is a relation, which can be further extended.
+    # 返回的对象时一个relation对象，可以进一步扩展。
     #
-    # === Using a module
+    # === 使用一个模块
     #
     #   module Pagination
     #     def page(number)
@@ -841,11 +812,11 @@ module ActiveRecord
     #   scope = Model.all.extending(Pagination)
     #   scope.page(params[:page])
     #
-    # You can also pass a list of modules:
+    # 你也可以传递一个模块列表(多个模块)
     #
     #   scope = Model.all.extending(Pagination, SomethingElse)
     #
-    # === Using a block
+    # === 使用一个块
     #
     #   scope = Model.all.extending do
     #     def page(number)
@@ -854,7 +825,7 @@ module ActiveRecord
     #   end
     #   scope.page(params[:page])
     #
-    # You can also use a block and a module list:
+    # 你也可以同时使用块和模块列表进行继承扩展：
     #
     #   scope = Model.all.extending(Pagination) do
     #     def per_page(number)
@@ -879,7 +850,7 @@ module ActiveRecord
       self
     end
 
-    # Reverse the existing order clause on the relation.
+    # 颠倒关系的排序，如ASC转为DESC
     #
     #   User.order('name ASC').reverse_order # generated SQL has 'ORDER BY name DESC'
     def reverse_order
@@ -898,7 +869,7 @@ module ActiveRecord
       self
     end
 
-    # Returns the Arel object associated with the relation.
+    # 返回与relation关联的Arel对象。
     def arel(aliases = nil) # :nodoc:
       @arel ||= build_arel(aliases)
     end

@@ -44,30 +44,28 @@ module ActiveRecord
       populate_with_current_scope_attributes
     end
 
-    # This class stores the +:current_scope+ and +:ignore_default_scope+ values
-    # for different classes. The registry is stored as a thread local, which is
-    # accessed through +ScopeRegistry.current+.
+    # 这个类为不同的类存储:current_scope和ignore_default_scope。它存储在线程local中，
+    # 即可以通过ScopeRegistry.current来访问。
     #
-    # This class allows you to store and get the scope values on different
-    # classes and different types of scopes. For example, if you are attempting
-    # to get the current_scope for the +Board+ model, then you would use the
-    # following code:
+    # 这个类允许你获取不同的scope值。例如，如果你正在尝试获取+Board+模型的current_scope,
+    # 可以使用下面的代码：
     #
     #   registry = ActiveRecord::Scoping::ScopeRegistry
     #   registry.set_value_for(:current_scope, Board, some_new_scope)
     #
-    # Now when you run:
+    # 现在你可以运行:
     #
     #   registry.value_for(:current_scope, Board)
     #
-    # You will obtain whatever was defined in +some_new_scope+. The #value_for
-    # and #set_value_for methods are delegated to the current ScopeRegistry
-    # object, so the above example code can also be called as:
+    # 你将获得+some_new_scope+中定义的任何内容。#value_for和#set_value_for方法被委托给了当前
+    # 的ScopeRegistry对象，所以刚才的例子也可以这样调用：
     #
     #   ActiveRecord::Scoping::ScopeRegistry.set_value_for(:current_scope,
     #       Board, some_new_scope)
     class ScopeRegistry # :nodoc:
-      extend ActiveSupport::PerThreadRegistry
+      # 通过这个模块重写了method_missing，定义了delegate 到当前线程实例，从而
+      # 可以通过调用ActiveRecord::Scoping::ScopeRegistry.value_for等方法
+      extend ActiveSupport::PerThreadRegistry 
 
       VALID_SCOPE_TYPES = [:current_scope, :ignore_default_scope]
 
@@ -78,15 +76,26 @@ module ActiveRecord
       # Obtains the value for a given +scope_type+ and +model+.
       def value_for(scope_type, model, skip_inherited_scope = false)
         raise_invalid_scope_type!(scope_type)
-        return @registry[scope_type][model.name] if skip_inherited_scope
-        klass = model
-        base = model.base_class
-        while klass <= base
-          value = @registry[scope_type][klass.name]
-          return value if value
-          klass = klass.superclass
+
+        if skip_inherited_scope
+          return @registry[scope_type][model.name]
+        else
+          klass = model
+          base = model.base_class
+          while klass <= base
+            value = @registry[scope_type][klass.name]
+            if value
+              return value
+            else
+              klass = klass.superclass
+            end
+            
+          end
+
+
         end
-      end
+
+      end # def value_for .. end
 
       # Sets the +value+ for a given +scope_type+ and +model+.
       def set_value_for(scope_type, model, value)

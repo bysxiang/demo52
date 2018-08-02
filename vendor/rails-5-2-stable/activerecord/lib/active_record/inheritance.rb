@@ -3,35 +3,29 @@
 require "active_support/core_ext/hash/indifferent_access"
 
 module ActiveRecord
-  # == Single table inheritance
+  # == 单表继承
   #
-  # Active Record allows inheritance by storing the name of the class in a column that by
-  # default is named "type" (can be changed by overwriting <tt>Base.inheritance_column</tt>).
-  # This means that an inheritance looking like this:
+  # Active Record允许将类的名称存储在一个列中来继承，默认名称为type(可以通过重写Base.inheritance_column
+  # 更改。 这意味着继承看起来像这样)。
   #
   #   class Company < ActiveRecord::Base; end
   #   class Firm < Company; end
   #   class Client < Company; end
   #   class PriorityClient < Client; end
   #
-  # When you do <tt>Firm.create(name: "37signals")</tt>, this record will be saved in
-  # the companies table with type = "Firm". You can then fetch this row again using
-  # <tt>Company.where(name: '37signals').first</tt> and it will return a Firm object.
+  # 当你使用Firm.create(name: "37signals")时，记录将存储 type = "Firm"。你能通过
+  # Company.where(name: "37signals").first，他将返回一个Firm对象。
   #
-  # Be aware that because the type column is an attribute on the record every new
-  # subclass will instantly be marked as dirty and the type column will be included
-  # in the list of changed attributes on the record. This is different from non
-  # Single Table Inheritance(STI) classes:
+  # 请注意，因为Type列是每个新纪录的属性，创建一个子类对象，将立即被标记为dirty，并将type的
+  # 改变信息存储在属性列表中。这与非单表继承的类不同：
   #
   #   Company.new.changed? # => false
   #   Firm.new.changed?    # => true
   #   Firm.new.changes     # => {"type"=>["","Firm"]}
   #
-  # If you don't have a type column defined in your table, single-table inheritance won't
-  # be triggered. In that case, it'll work just like normal subclasses with no special magic
-  # for differentiating between them or reloading the right type with find.
+  # 如果你没有定义类型列，单表继承不会被触发。在这种情况下，它与普通类相同。
   #
-  # Note, all the attributes for all the cases are kept in the same table. Read more:
+  # 所有的属性都保存在一个表中。阅读了解更多：
   # https://www.martinfowler.com/eaaCatalog/singleTableInheritance.html
   #
   module Inheritance

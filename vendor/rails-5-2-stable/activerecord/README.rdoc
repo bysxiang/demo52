@@ -7,6 +7,10 @@ class and an existing table in the database. In the context of an application,
 these classes are commonly referred to as *models*. Models can also be
 connected to other models; this is done by defining *associations*.
 
+AcitveRecord将类连接到数据库已建立几乎零配置的持久层。这个库提供了一个基类，当子类化时，
+他简历了一个新的映射类关联数据库中的现有表。在应用上下文中，这些类通常被称为*models*。
+
+
 Active Record relies heavily on naming in that it uses class and association
 names to establish mappings between respective database tables and foreign key
 columns. Although these mappings can be defined explicitly, it's recommended

@@ -2,6 +2,9 @@
 
 module ActiveRecord
   # = Active Record \Relation
+  #
+  # Relation代表的是关系数据库中的一个表，@klass代表的是一个模型类。
+  #
   class Relation
     MULTI_VALUE_METHODS  = [:includes, :eager_load, :preload, :select, :group,
                             :order, :joins, :left_outer_joins, :references,

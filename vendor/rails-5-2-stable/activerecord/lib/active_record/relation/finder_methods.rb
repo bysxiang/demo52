@@ -6,9 +6,8 @@ module ActiveRecord
   module FinderMethods
     ONE_AS_ONE = "1 AS one"
 
-    # Find by id - This can either be a specific id (1), a list of ids (1, 5, 6), or an array of ids ([5, 6, 10]).
-    # If one or more records can not be found for the requested ids, then RecordNotFound will be raised. If the primary key
-    # is an integer, find by id coerces its arguments using +to_i+.
+    # 通过id查找 - 可以一个特定的id（1），一个ids列表(1, 5, 6)，或ids数组([5, 6, 10])。如果无法为请求的id找到一条或多条记录，
+    # 则将抛出RecordNotFound异常。如果主键是一个整数，通过id轻质使用+to_i+查找它的参数。
     #
     #   Person.find(1)          # returns the object for ID = 1
     #   Person.find("1")        # returns the object for ID = 1
@@ -18,18 +17,14 @@ module ActiveRecord
     #   Person.find([1])        # returns an array for the object with ID = 1
     #   Person.where("administrator = 1").order("created_on DESC").find(1)
     #
-    # NOTE: The returned records are in the same order as the ids you provide.
-    # If you want the results to be sorted by database, you can use ActiveRecord::QueryMethods#where
-    # method and provide an explicit ActiveRecord::QueryMethods#order option.
-    # But ActiveRecord::QueryMethods#where method doesn't raise ActiveRecord::RecordNotFound.
+    # 注意：返回的记录与您提供的id的顺序相同。如果你想要按数据库排序结果，可以使用ActiveRecord::QueryMethods#where
+    # 方法并额外提供一个ActiveRecord::QueryMethods#order选项。但是AcitveRecord::QueryMethods#where方法不会抛出
+    # ActiveRecord::RecordNotFound异常。
     #
-    # ==== Find with lock
+    # ==== 使用查找锁
     #
-    # Example for find with a lock: Imagine two concurrent transactions:
-    # each will read <tt>person.visits == 2</tt>, add 1 to it, and save, resulting
-    # in two saves of <tt>person.visits = 3</tt>. By locking the row, the second
-    # transaction has to wait until the first is finished; we get the
-    # expected <tt>person.visits == 4</tt>.
+    # 使用查找锁的示例：假设有两个并发事务：每个读visit == 2的人，对它加1并保存，结果此时有另一个人也在访问，两次访问
+    # 保存为3.通过锁定行，第二行事务必须等到第一个完成。我们得到预期的person.visits == 4.
     #
     #   Person.transaction do
     #     person = Person.lock(true).find(1)
@@ -37,43 +32,46 @@ module ActiveRecord
     #     person.save!
     #   end
     #
-    # ==== Variations of #find
+    # ==== #find的变种
     #
     #   Person.where(name: 'Spartacus', rating: 4)
-    #   # returns a chainable list (which can be empty).
+    #   # 返回可链式操作的列表 (可以为空)
     #
     #   Person.find_by(name: 'Spartacus', rating: 4)
-    #   # returns the first item or nil.
+    #   # 返回第一个对象或nil
     #
     #   Person.find_or_initialize_by(name: 'Spartacus', rating: 4)
-    #   # returns the first item or returns a new instance (requires you call .save to persist against the database).
+    #   # 返回第一个实例或构造一个新实例(需要你手动调用.save来持久化到数据库)
     #
     #   Person.find_or_create_by(name: 'Spartacus', rating: 4)
-    #   # returns the first item or creates it and returns it.
+    #   # 返回第一个实例或创建新的实例
     #
-    # ==== Alternatives for #find
+    # ==== find的替代方案
     #
     #   Person.where(name: 'Spartacus', rating: 4).exists?(conditions = :none)
-    #   # returns a boolean indicating if any record with the given conditions exist.
+    #   # 返回一个布尔值，指示是否存在具有给定条件的任何记录。
     #
     #   Person.where(name: 'Spartacus', rating: 4).select("field1, field2, field3")
-    #   # returns a chainable list of instances with only the mentioned fields.
+    #   # 返回一个可链式操作的列表，实例只包括特定列
     #
     #   Person.where(name: 'Spartacus', rating: 4).ids
+    #   # 返回一个ids的数组
     #   # returns an Array of ids.
     #
     #   Person.where(name: 'Spartacus', rating: 4).pluck(:field1, :field2)
-    #   # returns an Array of the required fields.
+    #   # 返回一个只包括特定字段的数组
     def find(*args)
-      return super if block_given?
-      find_with_ids(*args)
+      if block_given?
+        return super
+      else
+        find_with_ids(*args)
+      end
     end
 
-    # Finds the first record matching the specified conditions. There
-    # is no implied ordering so if order matters, you should specify it
-    # yourself.
-    #
-    # If no record is found, returns <tt>nil</tt>.
+    # 根据指定的条件查找第一个就。它没有隐式的排序，你需要自己指定。例如：
+    # Card.order("id desc").find_by(ancestry_id: 2048)
+    # 
+    # 如果记录没有找到，返回nil
     #
     #   Post.find_by name: 'Spartacus', rating: 4
     #   Post.find_by "published_at < ?", 2.weeks.ago
@@ -83,8 +81,7 @@ module ActiveRecord
       nil
     end
 
-    # Like #find_by, except that if no record is found, raises
-    # an ActiveRecord::RecordNotFound error.
+    # 类似find_by, 如果没有找到记录，将抛出ActiveRecord::RecordNotFound异常
     def find_by!(arg, *args)
       where(arg, *args).take!
     rescue ::RangeError
@@ -92,10 +89,9 @@ module ActiveRecord
                                @klass.name, @klass.primary_key)
     end
 
-    # Gives a record (or N records if a parameter is supplied) without any implied
-    # order. The order will depend on the database implementation.
-    # If an order is supplied it will be respected.
-    #
+    # 返回一条记录（如果提供了一个参数，则给出N条记录），不会隐式排序，取决于数据库实现。
+    # 如果提供了order，它将被尊重。
+    # 
     #   Person.take # returns an object fetched by SELECT * FROM people LIMIT 1
     #   Person.take(5) # returns 5 objects fetched by SELECT * FROM people LIMIT 5
     #   Person.where(["name LIKE '%?'", name]).take
@@ -103,14 +99,14 @@ module ActiveRecord
       limit ? find_take_with_limit(limit) : find_take
     end
 
-    # Same as #take but raises ActiveRecord::RecordNotFound if no record
-    # is found. Note that #take! accepts no arguments.
+    # 类似take方法，当没有找到记录时抛出异常。
+    # 注意，他没有任何参数。
     def take!
       take || raise_record_not_found_exception!
     end
 
-    # Find the first record (or first N records if a parameter is supplied).
-    # If no order is defined it will order by primary key.
+    # 查找第一个记录(如果提供了参数返回N条记录)。
+    # 如果没有排序，将按主键排序
     #
     #   Person.first # returns the first object fetched by SELECT * FROM people ORDER BY people.id LIMIT 1
     #   Person.where(["user_name = ?", user_name]).first
@@ -126,44 +122,39 @@ module ActiveRecord
       end
     end
 
-    # Same as #first but raises ActiveRecord::RecordNotFound if no record
-    # is found. Note that #first! accepts no arguments.
+    # 类似first方法，但是如果没有找到，将会抛出ActiveRecord::RecordNotFound异常
+    # 注意：此方法不接受任何参数。
     def first!
       first || raise_record_not_found_exception!
     end
 
-    # Find the last record (or last N records if a parameter is supplied).
-    # If no order is defined it will order by primary key.
+    # 查找最后一条记录 (如果提供了参数，返回多条记录)
+    # 如果没有提供order定义，将按主键排序
     #
-    #   Person.last # returns the last object fetched by SELECT * FROM people
+    #   Person.last # returns the last object fetched by SELECT * FROM people order by id desc limit
     #   Person.where(["user_name = ?", user_name]).last
     #   Person.order("created_on DESC").offset(5).last
-    #   Person.last(3) # returns the last three objects fetched by SELECT * FROM people.
-    #
-    # Take note that in that last case, the results are sorted in ascending order:
-    #
-    #   [#<Person id:2>, #<Person id:3>, #<Person id:4>]
-    #
-    # and not:
-    #
-    #   [#<Person id:4>, #<Person id:3>, #<Person id:2>]
+    #   Person.last(3) # returns the last three objects fetched by SELECT * FROM people order by id desc limit 3
     def last(limit = nil)
-      return find_last(limit) if loaded? || has_limit_or_offset?
+      if loaded? || has_limit_or_offset?
+        return find_last(limit)
+      else
+        result = ordered_relation.limit(limit)
+        result = result.reverse_order!
 
-      result = ordered_relation.limit(limit)
-      result = result.reverse_order!
+        limit ? result.reverse : result.first
+      end
 
-      limit ? result.reverse : result.first
+      
     end
 
-    # Same as #last but raises ActiveRecord::RecordNotFound if no record
-    # is found. Note that #last! accepts no arguments.
+    # 类似last方法，但此方法如果没有找到就，会抛出ActiveRecord::RecordNotFound。
+    # 注意此方法不接受任何参数。
     def last!
       last || raise_record_not_found_exception!
     end
 
-    # Find the second record.
-    # If no order is defined it will order by primary key.
+    # 查找第二条记录。如果没有定义order，将按主键排序。
     #
     #   Person.second # returns the second object fetched by SELECT * FROM people
     #   Person.offset(3).second # returns the second object from OFFSET 3 (which is OFFSET 4)
@@ -172,8 +163,7 @@ module ActiveRecord
       find_nth 1
     end
 
-    # Same as #second but raises ActiveRecord::RecordNotFound if no record
-    # is found.
+    # 类似second方法，只是当找不到记录时会抛出ActiveRecord::RecordNotFound异常
     def second!
       second || raise_record_not_found_exception!
     end
@@ -274,25 +264,19 @@ module ActiveRecord
       second_to_last || raise_record_not_found_exception!
     end
 
-    # Returns true if a record exists in the table that matches the +id+ or
-    # conditions given, or false otherwise. The argument can take six forms:
+    # 如果有记录与id或条件匹配，返回true，否则返回false。参数支持6种形式：
     #
-    # * Integer - Finds the record with this primary key.
-    # * String - Finds the record with a primary key corresponding to this
-    #   string (such as <tt>'5'</tt>).
-    # * Array - Finds the record that matches these +find+-style conditions
-    #   (such as <tt>['name LIKE ?', "%#{query}%"]</tt>).
-    # * Hash - Finds the record that matches these +find+-style conditions
-    #   (such as <tt>{name: 'David'}</tt>).
-    # * +false+ - Returns always +false+.
-    # * No args - Returns +false+ if the relation is empty, +true+ otherwise.
+    # * Integer - 通过主键查找
+    # * String - 一个主键字符串, 如'5'
+    # * Array - 通过+find+风格的条件查找记录(如 <tt>['name LIKE ?', "%#{query}%"]</tt>) 
+    # * Hash - 通过+find+风格的条件查找记录(如 <tt>{name: 'David'}</tt>) 
+    # * +false+ - 返回false
+    # * No args - 如果管理是空的，返回false，否则返回true。
+    # 
+    # 有关条件指定为Hash或数组的详细信息，参见ActiveRecord::Base.
     #
-    # For more information about specifying conditions as a hash or array,
-    # see the Conditions section in the introduction to ActiveRecord::Base.
-    #
-    # Note: You can't pass in a condition as a string (like <tt>name =
-    # 'Jamie'</tt>), since it would be sanitized and then queried against
-    # the primary key column, like <tt>id = 'name = \'Jamie\''</tt>.
+    # 注意：你不能传递一个字符串条件（像 <tt>name ='Jamie'</tt>）,它会被精华，然后被当作主键列。
+    # 像 <tt>id = 'name = \'Jamie\''</tt>.
     #
     #   Person.exists?(5)
     #   Person.exists?('5')
@@ -310,31 +294,34 @@ module ActiveRecord
         MSG
       end
 
-      return false if !conditions || limit_value == 0
+      if !conditions || limit_value == 0
+        return false
+      else
+        if eager_loading?
+          relation = apply_join_dependency(eager_loading: false)
+          return relation.exists?(conditions)
+        else
+          relation = construct_relation_for_exists(conditions)
 
-      if eager_loading?
-        relation = apply_join_dependency(eager_loading: false)
-        return relation.exists?(conditions)
-      end
+          skip_query_cache_if_necessary { connection.select_value(relation.arel, "#{name} Exists") } ? true : false
+        end
 
-      relation = construct_relation_for_exists(conditions)
-
-      skip_query_cache_if_necessary { connection.select_value(relation.arel, "#{name} Exists") } ? true : false
+      end # .. if !conditions || limit_value == 0 .. end
     rescue ::RangeError
       false
     end
 
-    # This method is called whenever no records are found with either a single
-    # id or multiple ids and raises an ActiveRecord::RecordNotFound exception.
-    #
-    # The error message is different depending on whether a single id or
-    # multiple ids are provided. If multiple ids are provided, then the number
-    # of results obtained should be provided in the +result_size+ argument and
-    # the expected number of results should be provided in the +expected_size+
-    # argument.
-    def raise_record_not_found_exception!(ids = nil, result_size = nil, expected_size = nil, key = primary_key, not_found_ids = nil) # :nodoc:
+    # 每当找不到任何一个记录时(通过id，或ids)，都会调用此方法。
+    # 它将引发ActiveRecord::RecordNotFound异常。
+    # 
+    # 错误消息取决于单个id还是提供了多个id，如果提供了多个id,则需要提供+result_size+
+    # - 实际的结果数量，+expected_size+ - 预期的数量。
+    def raise_record_not_found_exception!(ids = nil, result_size = nil, expected_size = nil, 
+      key = primary_key, not_found_ids = nil) # :nodoc:
       conditions = arel.where_sql(@klass)
-      conditions = " [#{conditions}]" if conditions
+      if conditions
+        conditions = " [#{conditions}]"
+      end
       name = @klass.name
 
       if ids.nil?
@@ -415,11 +402,19 @@ module ActiveRecord
         reflections.none?(&:collection?)
       end
 
+      # 处理find方法的返回值
+      # 可以是单个，也可能是数组
       def find_with_ids(*ids)
-        raise UnknownPrimaryKey.new(@klass) if primary_key.nil?
+        # 如果记录不存在主键
+        if primary_key.nil?
+          raise UnknownPrimaryKey.new(@klass)
+        end
 
+        # 参数为空数组
         expects_array = ids.first.kind_of?(Array)
-        return ids.first if expects_array && ids.first.empty?
+        if expects_array && ids.first.empty?
+          return ids.first
+        end
 
         ids = ids.flatten.compact.uniq
 

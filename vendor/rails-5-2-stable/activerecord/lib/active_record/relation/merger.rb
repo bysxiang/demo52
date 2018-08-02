@@ -43,7 +43,7 @@ module ActiveRecord
         }
         other
       end
-    end
+    end # HashMerger .. end
 
     class Merger # :nodoc:
       attr_reader :relation, :values, :other
@@ -189,6 +189,6 @@ module ActiveRecord
           having_clause = relation.having_clause.merge(other.having_clause)
           relation.having_clause = having_clause unless having_clause.empty?
         end
-    end
+    end # Merger .. end
   end
 end

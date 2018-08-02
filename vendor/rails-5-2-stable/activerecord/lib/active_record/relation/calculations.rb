@@ -2,45 +2,42 @@
 
 module ActiveRecord
   module Calculations
-    # Count the records.
+    # 记录的数量
     #
     #   Person.count
-    #   # => the total count of all people
+    #   # => 表的所有记录数量
     #
     #   Person.count(:age)
-    #   # => returns the total count of all people whose age is present in database
+    #   # => 返回数据库中存在年龄的所有人的总数
     #
     #   Person.count(:all)
-    #   # => performs a COUNT(*) (:all is an alias for '*')
+    #   # => 执行一个 COUNT(*) (:all is an alias for '*')
     #
     #   Person.distinct.count(:age)
-    #   # => counts the number of different age values
+    #   # => 统计不同年龄值的数量
     #
-    # If #count is used with {Relation#group}[rdoc-ref:QueryMethods#group],
-    # it returns a Hash whose keys represent the aggregated column,
-    # and the values are the respective amounts:
+    # 如果#count与 {Relation#group}[rdoc-ref:QueryMethods#group]一起使用，它将返回一个哈希，其键代表
+    # 聚合列，并且值是相应的金额。如果多个聚合列，键就是数组
     #
     #   Person.group(:city).count
     #   # => { 'Rome' => 5, 'Paris' => 3 }
-    #
-    # If #count is used with {Relation#group}[rdoc-ref:QueryMethods#group] for multiple columns, it returns a Hash whose
-    # keys are an array containing the individual values of each column and the value
-    # of each key would be the #count.
     #
     #   Article.group(:status, :category).count
     #   # =>  {["draft", "business"]=>10, ["draft", "technology"]=>4,
     #          ["published", "business"]=>0, ["published", "technology"]=>2}
     #
-    # If #count is used with {Relation#select}[rdoc-ref:QueryMethods#select], it will count the selected columns:
+    # If #count is used with {Relation#select}[], it will count the selected columns:
+    #
+    # 如果#count使用{Relation#select}[rdoc-ref:QueryMethods#select], 则count计算选择的列。
     #
     #   Person.select(:age).count
-    #   # => counts the number of different age values
+    #   # => 计算不同年龄值的数量
     #
-    # Note: not all valid {Relation#select}[rdoc-ref:QueryMethods#select] expressions are valid #count expressions. The specifics differ
-    # between databases. In invalid cases, an error from the database is thrown.
+    # 注意：并非所有有效的{Relation#select}[rdoc-ref:QueryMethods#select]都是有效的#count表达式。不同数据库不同。
+    # 例如，mysql不支持count多个列。如果无效，将抛出数据库错误。
     def count(column_name = nil)
       if block_given?
-        unless column_name.nil?
+        if ! column_name.nil?
           ActiveSupport::Deprecation.warn \
             "When `count' is called with a block, it ignores other arguments. " \
             "This behavior is now deprecated and will result in an ArgumentError in Rails 6.0."

@@ -6,6 +6,7 @@ require "active_support/core_ext/kernel/singleton_class"
 
 module ActiveRecord
   # = Active Record \Named \Scopes
+  # 作用域命名模块
   module Scoping
     module Named
       extend ActiveSupport::Concern
