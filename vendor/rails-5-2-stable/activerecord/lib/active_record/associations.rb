@@ -183,6 +183,7 @@ module ActiveRecord
   end
 
   # See ActiveRecord::Associations::ClassMethods for documentation.
+  # 这个模块用于在模型中定义关联
   module Associations # :nodoc:
     extend ActiveSupport::Autoload
     extend ActiveSupport::Concern
@@ -276,12 +277,8 @@ module ActiveRecord
         @association_cache[name] = association
       end
 
-      # \Associations are a set of macro-like class methods for tying objects together through
-      # foreign keys. They express relationships like "Project has one Project Manager"
-      # or "Project belongs to a Portfolio". Each macro adds a number of methods to the
-      # class which are specialized according to the collection or association symbol and the
-      # options hash. It works much the same way as Ruby's own <tt>attr*</tt>
-      # methods.
+      # 关联是一组宏类类方法，通过外键将对象捆绑在一起。它们表达了像"项目有一个项目经理"或"项目属于投资组合"
+      # 这样的关系。每个宏都添加了一些方法，根据集合或关联符号和hash选项。它的工作原理类似ruby的attr_*方法
       #
       #   class Project < ActiveRecord::Base
       #     belongs_to              :portfolio
@@ -290,8 +287,8 @@ module ActiveRecord
       #     has_and_belongs_to_many :categories
       #   end
       #
-      # The project class now has the following methods (and more) to ease the traversal and
-      # manipulation of its relationships:
+      # Project类现在有以下(和更多)方法以简化关系的遍历和操作：
+      #
       # * <tt>Project#portfolio, Project#portfolio=(portfolio), Project#portfolio.nil?</tt>
       # * <tt>Project#project_manager, Project#project_manager=(project_manager), Project#project_manager.nil?,</tt>
       # * <tt>Project#milestones.empty?, Project#milestones.size, Project#milestones, Project#milestones<<(milestone),</tt>
@@ -300,17 +297,16 @@ module ActiveRecord
       # * <tt>Project#categories.empty?, Project#categories.size, Project#categories, Project#categories<<(category1),</tt>
       #   <tt>Project#categories.delete(category1), Project#categories.destroy(category1)</tt>
       #
-      # === A word of warning
+      # === 一些警告
       #
-      # Don't create associations that have the same name as {instance methods}[rdoc-ref:ActiveRecord::Core] of
-      # <tt>ActiveRecord::Base</tt>. Since the association adds a method with that name to
-      # its model, using an association with the same name as one provided by <tt>ActiveRecord::Base</tt> will override the method inherited through <tt>ActiveRecord::Base</tt> and will break things.
-      # For instance, +attributes+ and +connection+ would be bad choices for association names, because those names already exist in the list of <tt>ActiveRecord::Base</tt> instance methods.
+      # 不要创建与ActiveRecord::Base实例方法同名的关联(文档引用: ActiveRecord::Core)。因为关联添加了一个具有该名称的方法
+      # 在模型中，使用与AcitveRecord::Base提供的名称相同的关联将重写通过ActiveRecord::Base继承的方法，并将破坏东西。例如
+      # +attribute+和+connection+对于关联名称来说是不好的选择，因为这些名称已存在于ActiveRecord::Base的实例方法列表中。
       #
-      # == Auto-generated methods
-      # See also Instance Public methods below for more details.
+      # == 自动生成的方法
+      # 更多细节，参见下面的实例公共方法。
       #
-      # === Singular associations (one-to-one)
+      # === 单数关联 (one-to-one)
       #                                     |            |  belongs_to  |
       #   generated methods                 | belongs_to | :polymorphic | has_one
       #   ----------------------------------+------------+--------------+---------
@@ -321,7 +317,7 @@ module ActiveRecord
       #   create_other!(attributes={})      |     X      |              |    X
       #   reload_other                      |     X      |      X       |    X
       #
-      # === Collection associations (one-to-many / many-to-many)
+      # === 集合关联 (one-to-many / many-to-many)
       #                                     |       |          | has_many
       #   generated methods                 | habtm | has_many | :through
       #   ----------------------------------+-------+----------+----------
@@ -351,11 +347,10 @@ module ActiveRecord
       #   others.reset                      |   X   |    X     |    X
       #   others.reload                     |   X   |    X     |    X
       #
-      # === Overriding generated methods
+      # === 重写生成的方法
       #
-      # Association methods are generated in a module included into the model
-      # class, making overrides easy. The original generated method can thus be
-      # called with +super+:
+      # 这些关联方法定义在模块中，通过include，因此覆盖很容易。因此，通过+super+可以调用
+      # 原始生成的方法。
       #
       #   class Car < ActiveRecord::Base
       #     belongs_to :owner
@@ -367,16 +362,13 @@ module ActiveRecord
       #     end
       #   end
       #
-      # The association methods module is included immediately after the
-      # generated attributes methods module, meaning an association will
-      # override the methods for an attribute with the same name.
+      # 生成关联方法模块紧跟在生成属性方法模块之后，这意味着关联中的方法将覆盖有相同名称
+      # 的属性方法
       #
-      # == Cardinality and associations
+      # == 基数与关联
       #
-      # Active Record associations can be used to describe one-to-one, one-to-many and many-to-many
-      # relationships between models. Each model uses an association to describe its role in
-      # the relation. The #belongs_to association is always used in the model that has
-      # the foreign key.
+      # Active Record关联可用于描述一对一，一对多和多对多关系。每个模型使用一个来描述其角色的关联对象。#belongs_to
+      # 关联始终使用外键。
       #
       # === One-to-one
       #

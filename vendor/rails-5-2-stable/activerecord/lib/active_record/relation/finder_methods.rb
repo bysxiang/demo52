@@ -507,6 +507,7 @@ module ActiveRecord
       end
 
       def find_nth(index)
+        
         @offsets[offset_index + index] ||= find_nth_with_limit(index, 1).first
       end
 
@@ -548,6 +549,7 @@ module ActiveRecord
       end
 
       def ordered_relation
+        
         if order_values.empty? && primary_key
           order(arel_attribute(primary_key).asc)
         else

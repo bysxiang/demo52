@@ -12,12 +12,10 @@ module ActiveRecord
         @finish = finish
       end
 
-      # Looping through a collection of records from the database (using the
-      # +all+ method, for example) is very inefficient since it will try to
-      # instantiate all the objects at once.
+      # 循环遍历数据中的记录集合(例如，使用+all+方法)是非常低效的，因为它会尝试
+      # 一次实例化所有对象。
       #
-      # In that case, batch processing methods allow you to work with the
-      # records in batches, thereby greatly reducing memory consumption.
+      # 在这种情况下，批处理方法允许你使用批量记录(batches records)，从而大大减少内存消耗。
       #
       #   Person.in_batches.each_record do |person|
       #     person.do_awesome_stuff
@@ -27,17 +25,18 @@ module ActiveRecord
       #     person.party_all_night!
       #   end
       #
-      # If you do not provide a block to #each_record, it will return an Enumerator
-      # for chaining with other methods:
+      # 如果你不提供一个块，将返回Enumerator对象，你可以使用它来继续链式操作：
       #
       #   Person.in_batches.each_record.with_index do |person, index|
       #     person.award_trophy(index + 1)
       #   end
       def each_record
-        return to_enum(:each_record) unless block_given?
-
-        @relation.to_enum(:in_batches, of: @of, start: @start, finish: @finish, load: true).each do |relation|
-          relation.records.each { |record| yield record }
+        if ! block_given?
+          to_enum(:each_record)
+        else
+          @relation.to_enum(:in_batches, of: @of, start: @start, finish: @finish, load: true).each do |relation|
+            relation.records.each { |record| yield record }
+          end
         end
       end
 

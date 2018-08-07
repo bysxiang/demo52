@@ -6,15 +6,12 @@ module ActiveRecord
   module Batches
     ORDER_IGNORE_MESSAGE = "Scoped order is ignored, it's forced to be batch order."
 
-    # Looping through a collection of records from the database
-    # (using the Scoping::Named::ClassMethods.all method, for example)
-    # is very inefficient since it will try to instantiate all the objects at once.
+    # 循环访问数据库的记录集合(例如使用Scoping::Named::ClassMethods.all方法)
+    # 这非常低效，因为它尝试同时实例化所有对象。
     #
-    # In that case, batch processing methods allow you to work
-    # with the records in batches, thereby greatly reducing memory consumption.
+    # 在这种情况下，batch方法允许你处理批量记录，而且大大减少内存消耗。
     #
-    # The #find_each method uses #find_in_batches with a batch size of 1000 (or as
-    # specified by the +:batch_size+ option).
+    # #find_each方法使用#find_in_batches，批大小为1000(或通过+:batch_size+选项指定)
     #
     #   Person.find_each do |person|
     #     person.do_awesome_stuff
@@ -24,28 +21,23 @@ module ActiveRecord
     #     person.party_all_night!
     #   end
     #
-    # If you do not provide a block to #find_each, it will return an Enumerator
-    # for chaining with other methods:
+    # 如果没有提供一个块，将返回一个Enumerator对象，后续可以链式遍历
     #
     #   Person.find_each.with_index do |person, index|
     #     person.award_trophy(index + 1)
     #   end
     #
     # ==== Options
-    # * <tt>:batch_size</tt> - Specifies the size of the batch. Defaults to 1000.
-    # * <tt>:start</tt> - Specifies the primary key value to start from, inclusive of the value.
-    # * <tt>:finish</tt> - Specifies the primary key value to end at, inclusive of the value.
-    # * <tt>:error_on_ignore</tt> - Overrides the application config to specify if an error should be raised when
-    #   an order is present in the relation.
+    # * <tt>:batch_size</tt> - 指定批大小。默认1000.
+    # * <tt>:start</tt> - 指定开始的主键值
+    # * <tt>:finish</tt> - 指定结束的主键值
+    # * <tt>:error_on_ignore</tt> - 覆盖应用程序中的配置。是引发错误还是忽略。
     #
-    # Limits are honored, and if present there is no requirement for the batch
-    # size: it can be less than, equal to, or greater than the limit.
+    # limit会被尊重，如果存在的化，则不会考虑batch size，它可以小于、等于或大于
+    # batch_size。
     #
-    # The options +start+ and +finish+ are especially useful if you want
-    # multiple workers dealing with the same processing queue. You can make
-    # worker 1 handle all the records between id 1 and 9999 and worker 2
-    # handle from 10000 and beyond by setting the +:start+ and +:finish+
-    # option on each worker.
+    # 如果你愿意，选项+start+和+finish+特比有用，多个工作者处理相同的处理队列。
+    # 你可以worker1处理id 1..9999，worker2处理10000以上的记录。
     #
     #   # In worker 1, let's process until 9999 records.
     #   Person.find_each(finish: 9_999) do |person|
@@ -57,13 +49,10 @@ module ActiveRecord
     #     person.party_all_night!
     #   end
     #
-    # NOTE: It's not possible to set the order. That is automatically set to
-    # ascending on the primary key ("id ASC") to make the batch ordering
-    # work. This also means that this method only works when the primary key is
-    # orderable (e.g. an integer or string).
+    # 注意：无法设置ordder。这是自动设置为主键("id ASC")以进行批量排序工作。这也意味着此方法
+    # 仅在主键存在时才能有效排序。(可以是数字、字符串)
     #
-    # NOTE: By its nature, batch processing is subject to race conditions if
-    # other processes are modifying the database.
+    # 注意：按其性质，批处理以竞态条件为准，如果其他进程正在修改数据库。
     def find_each(start: nil, finish: nil, batch_size: 1000, error_on_ignore: nil)
       if block_given?
         find_in_batches(start: start, finish: finish, batch_size: batch_size, error_on_ignore: error_on_ignore) do |records|
@@ -77,55 +66,47 @@ module ActiveRecord
       end
     end
 
-    # Yields each batch of records that was found by the find options as
-    # an array.
+    # 生成由查找选项作为数组找到的批处理记录。
     #
     #   Person.where("age > 21").find_in_batches do |group|
     #     sleep(50) # Make sure it doesn't get too crowded in there!
     #     group.each { |person| person.party_all_night! }
     #   end
     #
-    # If you do not provide a block to #find_in_batches, it will return an Enumerator
-    # for chaining with other methods:
+    # 如果没有为#find_in_batches提供一个块，它将返回一个Enumerator对象以链式操作：
     #
     #   Person.find_in_batches.with_index do |group, batch|
     #     puts "Processing group ##{batch}"
     #     group.each(&:recover_from_last_night!)
     #   end
     #
-    # To be yielded each record one by one, use #find_each instead.
+    # 要逐个yield每个记录，使用#find_each替代。
     #
     # ==== Options
-    # * <tt>:batch_size</tt> - Specifies the size of the batch. Defaults to 1000.
-    # * <tt>:start</tt> - Specifies the primary key value to start from, inclusive of the value.
-    # * <tt>:finish</tt> - Specifies the primary key value to end at, inclusive of the value.
-    # * <tt>:error_on_ignore</tt> - Overrides the application config to specify if an error should be raised when
-    #   an order is present in the relation.
+    # * <tt>:batch_size</tt> - 指定批大小。默认1000.
+    # * <tt>:start</tt> - 指定开始的主键值
+    # * <tt>:finish</tt> - 指定结束的主键值
+    # * <tt>:error_on_ignore</tt> - 覆盖应用程序中的配置。是引发错误还是忽略。
     #
-    # Limits are honored, and if present there is no requirement for the batch
-    # size: it can be less than, equal to, or greater than the limit.
+    # limit会被尊重，如果存在的化，则不会考虑batch size，它可以小于、等于或大于
+    # batch_size。
     #
-    # The options +start+ and +finish+ are especially useful if you want
-    # multiple workers dealing with the same processing queue. You can make
-    # worker 1 handle all the records between id 1 and 9999 and worker 2
-    # handle from 10000 and beyond by setting the +:start+ and +:finish+
-    # option on each worker.
+    # 如果你愿意，选项+start+和+finish+特比有用，多个工作者处理相同的处理队列。
+    # 你可以worker1处理id 1..9999，worker2处理10000以上的记录。
     #
     #   # Let's process from record 10_000 on.
     #   Person.find_in_batches(start: 10_000) do |group|
     #     group.each { |person| person.party_all_night! }
     #   end
     #
-    # NOTE: It's not possible to set the order. That is automatically set to
-    # ascending on the primary key ("id ASC") to make the batch ordering
-    # work. This also means that this method only works when the primary key is
-    # orderable (e.g. an integer or string).
+    # 注意：无法设置ordder。这是自动设置为主键("id ASC")以进行批量排序工作。这也意味着此方法
+    # 仅在主键存在时才能有效排序。(可以是数字、字符串)
     #
-    # NOTE: By its nature, batch processing is subject to race conditions if
-    # other processes are modifying the database.
+    # 注意：按其性质，批处理以竞态条件为准，如果其他进程正在修改数据库。
     def find_in_batches(start: nil, finish: nil, batch_size: 1000, error_on_ignore: nil)
       relation = self
-      unless block_given?
+
+      if ! block_given?
         return to_enum(:find_in_batches, start: start, finish: finish, batch_size: batch_size, error_on_ignore: error_on_ignore) do
           total = apply_limits(relation, start, finish).size
           (total - 1).div(batch_size) + 1
@@ -137,48 +118,43 @@ module ActiveRecord
       end
     end
 
-    # Yields ActiveRecord::Relation objects to work with a batch of records.
+    # yield Relaction对象以处理一批记录。
     #
     #   Person.where("age > 21").in_batches do |relation|
     #     relation.delete_all
     #     sleep(10) # Throttle the delete queries
     #   end
     #
-    # If you do not provide a block to #in_batches, it will return a
-    # BatchEnumerator which is enumerable.
+    # 如果你没有提供一个块，他将返回一个BatchEnumerator对象。
     #
     #   Person.in_batches.each_with_index do |relation, batch_index|
     #     puts "Processing relation ##{batch_index}"
     #     relation.delete_all
     #   end
     #
-    # Examples of calling methods on the returned BatchEnumerator object:
+    # 再返回的额BatchEnumerator对象上调用方法的示例：
     #
     #   Person.in_batches.delete_all
     #   Person.in_batches.update_all(awesome: true)
     #   Person.in_batches.each_record(&:party_all_night!)
     #
     # ==== Options
-    # * <tt>:of</tt> - Specifies the size of the batch. Defaults to 1000.
-    # * <tt>:load</tt> - Specifies if the relation should be loaded. Defaults to false.
-    # * <tt>:start</tt> - Specifies the primary key value to start from, inclusive of the value.
-    # * <tt>:finish</tt> - Specifies the primary key value to end at, inclusive of the value.
-    # * <tt>:error_on_ignore</tt> - Overrides the application config to specify if an error should be raised when
-    #   an order is present in the relation.
+    # * <tt>:of</tt> - 指定批大小。默认1000.
+    # * <tt>:load</tt> - 指定是否应该加载关系，默认为false。
+    # * <tt>:start</tt> - 指定开始的主键值
+    # * <tt>:finish</tt> - 指定结束的主键值
+    # * <tt>:error_on_ignore</tt> - 覆盖应用程序中的配置。是引发错误还是忽略。
     #
-    # Limits are honored, and if present there is no requirement for the batch
-    # size, it can be less than, equal, or greater than the limit.
+    # limit会被尊重，如果存在的化，则不会考虑batch size，它可以小于、等于或大于
+    # batch_size。
     #
-    # The options +start+ and +finish+ are especially useful if you want
-    # multiple workers dealing with the same processing queue. You can make
-    # worker 1 handle all the records between id 1 and 9999 and worker 2
-    # handle from 10000 and beyond by setting the +:start+ and +:finish+
-    # option on each worker.
+    # 如果你愿意，选项+start+和+finish+特比有用，多个工作者处理相同的处理队列。
+    # 你可以worker1处理id 1..9999，worker2处理10000以上的记录。
     #
     #   # Let's process from record 10_000 on.
     #   Person.in_batches(start: 10_000).update_all(awesome: true)
     #
-    # An example of calling where query method on the relation:
+    # 调用关系上查询方法的示例：
     #
     #   Person.in_batches.each do |relation|
     #     relation.update_all('age = age + 1')
@@ -186,21 +162,18 @@ module ActiveRecord
     #     relation.where('age <= 21').delete_all
     #   end
     #
-    # NOTE: If you are going to iterate through each record, you should call
-    # #each_record on the yielded BatchEnumerator:
+    # 注意： 如果你要遍历每条记录，则应该调用each_record产生的BatchEnumerator上
+    # 的each_record
     #
     #   Person.in_batches.each_record(&:party_all_night!)
     #
-    # NOTE: It's not possible to set the order. That is automatically set to
-    # ascending on the primary key ("id ASC") to make the batch ordering
-    # consistent. Therefore the primary key must be orderable, e.g. an integer
-    # or a string.
+    # 注意：无法设置ordder。这是自动设置为主键("id ASC")以进行批量排序工作。这也意味着此方法
+    # 仅在主键存在时才能有效排序。(可以是数字、字符串)
     #
-    # NOTE: By its nature, batch processing is subject to race conditions if
-    # other processes are modifying the database.
+    # 注意：按其性质，批处理以竞态条件为准，如果其他进程正在修改数据库。
     def in_batches(of: 1000, start: nil, finish: nil, load: false, error_on_ignore: nil)
       relation = self
-      unless block_given?
+      if ! block_given?
         return BatchEnumerator.new(of: of, start: start, finish: finish, relation: self)
       end
 
@@ -230,30 +203,32 @@ module ActiveRecord
           yielded_relation = where(primary_key => ids)
         end
 
-        break if ids.empty?
+        if ! ids.empty?
+          primary_key_offset = ids.last
+          raise ArgumentError.new("Primary key not included in the custom select clause") unless primary_key_offset
 
-        primary_key_offset = ids.last
-        raise ArgumentError.new("Primary key not included in the custom select clause") unless primary_key_offset
+          yield yielded_relation
 
-        yield yielded_relation
+          if ids.length >= batch_limit
 
-        break if ids.length < batch_limit
+            if limit_value
+              remaining -= ids.length
 
-        if limit_value
-          remaining -= ids.length
+              if remaining == 0
+                # Saves a useless iteration when the limit is a multiple of the
+                # batch size.
+                break
+              elsif remaining < batch_limit
+                relation = relation.limit(remaining)
+              end
+            end
 
-          if remaining == 0
-            # Saves a useless iteration when the limit is a multiple of the
-            # batch size.
-            break
-          elsif remaining < batch_limit
-            relation = relation.limit(remaining)
-          end
-        end
+            attr = Relation::QueryAttribute.new(primary_key, primary_key_offset, klass.type_for_attribute(primary_key))
+            batch_relation = relation.where(arel_attribute(primary_key).gt(Arel::Nodes::BindParam.new(attr)))
+          end # if ids.length >= batch_limit .. end
+        end # else ids.empty? .. end
 
-        attr = Relation::QueryAttribute.new(primary_key, primary_key_offset, klass.type_for_attribute(primary_key))
-        batch_relation = relation.where(arel_attribute(primary_key).gt(Arel::Nodes::BindParam.new(attr)))
-      end
+      end # loop .. end
     end
 
     private

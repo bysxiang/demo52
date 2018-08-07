@@ -297,7 +297,7 @@ module ActiveRecord
     def order!(*args) # :nodoc:
       preprocess_order_args(args)
 
-      self.order_values += args1
+      self.order_values += args
       self
     end
 
