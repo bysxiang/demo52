@@ -1,0 +1,21 @@
+source 'https://rubygems.org'
+
+gem 'appraisal'
+gem 'pry'
+gem 'sidekiq', :path => '..'
+gem 'rails', '5.0.1'
+
+platforms :ruby do
+  gem 'sqlite3'
+  gem 'redis-namespace'
+end
+
+#platforms :jruby do
+  #gem 'jruby-openssl'
+  #gem 'activerecord-jdbcsqlite3-adapter'
+#end
+
+#gem 'ruby-prof'
+
+#de Does not work with jruby or rbx:
+#de gem 'pry-byebug'
