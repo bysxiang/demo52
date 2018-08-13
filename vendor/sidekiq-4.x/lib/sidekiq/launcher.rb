@@ -106,15 +106,17 @@ module Sidekiq
           end
         end
 
-        # first heartbeat or recovering from an outage and need to reestablish our heartbeat
-        fire_event(:heartbeat) if !exists
+        # 第一次心跳或从停电中恢复，需要重新出发:heartbeat事件
+        if !exists
+          fire_event(:heartbeat)
+        end
 
-        return unless msg
-
-        if JVM_RESERVED_SIGNALS.include?(msg)
-          Sidekiq::CLI.instance.handle_signal(msg)
-        else
-          ::Process.kill(msg, $$)
+        if msg
+          if JVM_RESERVED_SIGNALS.include?(msg)
+            Sidekiq::CLI.instance.handle_signal(msg)
+          else
+            ::Process.kill(msg, $$)
+          end
         end
       rescue => e
         # ignore all redis/network issues
@@ -125,6 +127,8 @@ module Sidekiq
       end
     end
 
+    # 专门的维护心跳的线程代码
+    # 每5s执行一次heartbeat方法
     def start_heartbeat
       while true
         heartbeat

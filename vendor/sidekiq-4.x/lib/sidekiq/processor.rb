@@ -186,6 +186,7 @@ module Sidekiq
     FAILURE = Concurrent::AtomicFixnum.new
 
     # 执行作业并统计
+    # WORKER_STATE仅执行时存在负载记录，结束时会将其删除，这样它用来统计执行中的记录
     def stats(worker, job_hash, queue)
       tid = thread_identity
       WORKER_STATE[tid] = {:queue => queue, :payload => cloned(job_hash), :run_at => Time.now.to_i }

@@ -27,7 +27,7 @@ module Sidekiq
     attr_reader :workers
     attr_reader :options
 
-    # workers是Processor的集合
+    # workers是Processor的集合, 根据concurrency的设置，来设置Processor的数量
     # Manager持有workers集合
     def initialize(options={})
       logger.debug { options.inspect }
@@ -94,7 +94,7 @@ module Sidekiq
       end # if ! @workers.empty? .. end
     end
 
-    # 停止processor
+    # 停止processor，并将Processor对象从集合中删除
     def processor_stopped(processor)
       @plock.synchronize do
         @workers.delete(processor)

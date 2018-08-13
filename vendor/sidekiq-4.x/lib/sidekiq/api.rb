@@ -655,9 +655,8 @@ module Sidekiq
   end
 
   ##
-  # Enumerates the set of Sidekiq processes which are actively working
-  # right now.  Each process send a heartbeat to Redis every 5 seconds
-  # so this set should be relatively accurate, barring network partitions.
+  # 枚举目前正在积极工作的Sidekiq进程集合。每个进程每5s向Redis发送一个心跳，因此
+  # 这集合应该是相对准确的，除非是网络分区。
   #
   # Yields a Sidekiq::Process.
   #
@@ -668,8 +667,7 @@ module Sidekiq
       self.class.cleanup if clean_plz
     end
 
-    # Cleans up dead processes recorded in Redis.
-    # Returns the number of processes cleaned.
+    # 清理Redis中记录的死进程。返回已清理的进程数。
     def self.cleanup
       count = 0
       Sidekiq.redis do |conn|
@@ -680,15 +678,19 @@ module Sidekiq
           end
         end
 
-        # the hash named key has an expiry of 60 seconds.
-        # if it's not found, that means the process has not reported
-        # in to Redis and probably died.
+        # 名为key的hash值有效期60s。如果没有找到，这意味着改过程没有向Redis
+        # 报告，可能已经死亡。
         to_prune = []
         heartbeats.each_with_index do |beat, i|
-          to_prune << procs[i] if beat.nil?
+          if beat.nil?
+            to_prune << procs[i]
+          end
         end
-        count = conn.srem('processes', to_prune) unless to_prune.empty?
+        if ! to_prune.empty?
+          count = conn.srem('processes', to_prune)
+        end
       end
+
       count
     end
 
@@ -724,8 +726,7 @@ module Sidekiq
   end
 
   #
-  # Sidekiq::Process represents an active Sidekiq process talking with Redis.
-  # Each process has a set of attributes which look like this:
+  # Sidekiq::Process代表了与Redis交流的活跃Sidekiq进程。每个进程都有一组属性，如下：
   #
   # {
   #   'hostname' => 'app-1.example.com',
@@ -773,6 +774,8 @@ module Sidekiq
 
     private
 
+    # "#{identity}-signals" 用于存储信号值，以便在launcher
+    # 中进行处理。
     def signal(sig)
       key = "#{identity}-signals"
       Sidekiq.redis do |c|
@@ -786,26 +789,25 @@ module Sidekiq
     def identity
       self['identity']
     end
-  end
+  end # Process .. end
 
   ##
-  # A worker is a thread that is currently processing a job.
-  # Programmatic access to the current active worker set.
+  # 一个worker是当前正在处理作业的线程。这个类提供对活动workers的
+  # 编程访问。
   #
   # WARNING WARNING WARNING
   #
-  # This is live data that can change every millisecond.
-  # If you call #size => 5 and then expect #each to be
-  # called 5 times, you're going to have a bad time.
+  # 这是可以每毫秒改变一次的实时数据。如果你调用#size => 5，然后期望
+  # #each会被调用5次，你会过得很糟糕。(它可能是更多次)
   #
   #    workers = Sidekiq::Workers.new
   #    workers.size => 2
   #    workers.each do |process_id, thread_id, work|
-  #      # process_id is a unique identifier per Sidekiq process
-  #      # thread_id is a unique identifier per thread
-  #      # work is a Hash which looks like:
+  #      # process_id 是每个Sidekiq进程的唯一标识符
+  #      # thread_id 是每个线程的唯一标识符
+  #      # work 是一个Hash，它看起来像这样:
   #      # { 'queue' => name, 'run_at' => timestamp, 'payload' => msg }
-  #      # run_at is an epoch Integer.
+  #      # run_at 是运行时的时间戳。 (Time.now.to_i)
   #    end
   #
   class Workers
@@ -819,20 +821,20 @@ module Sidekiq
             conn.exists(key)
             conn.hgetall("#{key}:workers")
           end
-          next unless valid
-          workers.each_pair do |tid, json|
-            yield key, tid, Sidekiq.load_json(json)
+
+          if valid
+            workers.each_pair do |tid, json|
+              yield key, tid, Sidekiq.load_json(json)
+            end
           end
         end
       end
     end
 
-    # Note that #size is only as accurate as Sidekiq's heartbeat,
-    # which happens every 5 seconds.  It is NOT real-time.
+    # 请注意，#size仅与Sidekiq的心跳一样准确，每5s发生一次。这不是实时的。
     #
-    # Not very efficient if you have lots of Sidekiq
-    # processes but the alternative is a global counter
-    # which can easily get out of sync with crashy processes.
+    # 如果你有很多Sidekiq进程，效率就不高了。但另一种方案是全局计数器，很容易与
+    # 崩溃的进程不同步。
     def size
       Sidekiq.redis do |conn|
         procs = conn.smembers('processes')
@@ -847,6 +849,7 @@ module Sidekiq
         end
       end
     end
-  end
+
+  end # Workers .. end
 
 end

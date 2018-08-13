@@ -88,6 +88,7 @@ module Sidekiq
       require 'sidekiq/launcher'
       @launcher = Sidekiq::Launcher.new(options)
 
+      # 控制launcher的启用、终止和强制结束
       begin
         launcher.run
 
