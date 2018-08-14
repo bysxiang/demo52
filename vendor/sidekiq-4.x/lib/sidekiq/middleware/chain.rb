@@ -130,12 +130,11 @@ module Sidekiq
         # 它最终会执行到chain.empty?这里，
         # 并yield它
         traverse_chain = lambda do
-          puts "进入lambda"
+          #puts "进入lambda"
           if chain.empty?
-            puts "进入empty?"
             yield
           else
-            puts "输出args else, #{args}"
+          # puts "输出args else, #{args}"
             # 这里传递块
             chain.shift.call(*args, &traverse_chain)
           end

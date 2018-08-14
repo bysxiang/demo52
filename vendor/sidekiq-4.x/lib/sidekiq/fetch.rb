@@ -36,12 +36,8 @@ module Sidekiq
       # 虽然queues_cmd可包含多个键值，例如：['basic', 'bar', timeout]
       # 但是brpop方法每次只返回一个数组： [键名，值]
       cmd = queues_cmd
-      puts "输出cmd"
-      p cmd
 
       work = Sidekiq.redis { |conn| conn.brpop(*cmd) }
-      puts "输出work"
-      p work
       if work
         UnitOfWork.new(*work) # => 等效于UnitOfWork.new(work[0], work[1])
       end
