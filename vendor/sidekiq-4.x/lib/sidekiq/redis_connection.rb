@@ -19,9 +19,14 @@ module Sidekiq
         pool_timeout = options[:pool_timeout] || 1
         log_info(options)
 
-        ConnectionPool.new(:timeout => pool_timeout, :size => size) do
+        puts "输出options"
+        p options
+
+        obj = ConnectionPool.new(:timeout => pool_timeout, :size => size) do
           build_client(options)
         end
+
+        return obj
       end
 
       private
@@ -39,9 +44,15 @@ module Sidekiq
       end
 
       def build_client(options)
+        puts "进入当前方法"
         namespace = options[:namespace]
 
         client = Redis.new client_opts(options)
+
+        puts "输出client"
+        p options
+        p client
+
         if namespace
           begin
             require 'redis/namespace'

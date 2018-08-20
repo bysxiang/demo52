@@ -1,0 +1,1 @@
+Sidekiq.redis = { namespace: "sidekiq", url: "redis://192.168.1.89:6379/0" }
