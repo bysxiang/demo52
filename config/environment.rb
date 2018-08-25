@@ -14,12 +14,9 @@ Sidekiq.configure_client do |config|
   end
 end
 
-puts "输出sidekiq"
-p Sidekiq.redis_info
-
 
 #Test.perform_in(3500, 33)
-#Test2.perform_async(44)
+Test2.perform_async(44)
 
 # fetch = Sidekiq::BasicFetch.new(:queues => ["default"])
 # uow = fetch.retrieve_work

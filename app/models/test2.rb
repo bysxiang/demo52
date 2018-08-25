@@ -4,6 +4,6 @@ class Test2
   sidekiq_options :queue => "test_queue"
 
   def perform(*args)
-    puts "执行test2 worker"
+    puts "执行test2 worker, #{args}"
   end
 end

@@ -61,6 +61,9 @@ module Sidekiq
     def push(item)
       normed = normalize_item(item)
 
+      puts "输出normed"
+      p normed
+
       # payload形如：
       # {"class"=>"Test", "args"=>[33], "retry"=>true, 
       # "queue"=>"default", "jid"=>"1586b6cd42502f4adda203de", 
