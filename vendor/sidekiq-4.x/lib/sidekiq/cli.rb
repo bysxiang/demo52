@@ -46,6 +46,11 @@ module Sidekiq
     # Code within this method is not tested because it alters
     # global process state irreversibly.  PRs which improve the
     # test coverage of Sidekiq::CLI are welcomed.
+    #
+    # options[:queues] 表示要从哪些队列中取出值，默认只包括default
+    # 在Worker中指定了不在queues中不存在的队列，是不会进行处理的。
+    # 而只会存在于进入队列的部分
+    # 
     def run
       boot_system
       print_banner

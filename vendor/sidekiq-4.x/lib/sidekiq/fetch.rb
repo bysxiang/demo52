@@ -37,6 +37,9 @@ module Sidekiq
       # 但是brpop方法每次只返回一个数组： [键名，值]
       cmd = queues_cmd
 
+      # puts "输出cmd"
+      # p cmd
+
       work = Sidekiq.redis { |conn| conn.brpop(*cmd) }
       if work
         UnitOfWork.new(*work) # => 等效于UnitOfWork.new(work[0], work[1])

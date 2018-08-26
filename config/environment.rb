@@ -16,7 +16,7 @@ end
 
 
 #Test.perform_in(3500, 33)
-Test2.perform_async(44)
+#Test2.perform_async(44)
 
 # fetch = Sidekiq::BasicFetch.new(:queues => ["default"])
 # uow = fetch.retrieve_work
