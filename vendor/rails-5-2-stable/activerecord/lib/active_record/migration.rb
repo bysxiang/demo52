@@ -183,15 +183,11 @@ module ActiveRecord
 
   # = Active Record Migrations
   #
-  # Migrations can manage the evolution of a schema used by several physical
-  # databases. It's a solution to the common problem of adding a field to make
-  # a new feature work in your local database, but being unsure of how to
-  # push that change to other developers and to the production server. With
-  # migrations, you can describe the transformations in self-contained classes
-  # that can be checked into version control systems and executed against
-  # another database that might be one, two, or five versions behind.
+  # 迁移可以管理一个schema在多个不同的物理数据库。它是解决添加字段的常见问题的解决方案。
+  # 一个新功能在您本地数据库中工作，但不确定如何将该更改推送给其他开发人员和生产服务器。
+  # 在迁移中，你可以自描述转换，可以通过版本来确保迁移的执行。
   #
-  # Example of a simple migration:
+  # 一个简单的迁移：
   #
   #   class AddSsl < ActiveRecord::Migration[5.0]
   #     def up
@@ -203,15 +199,11 @@ module ActiveRecord
   #     end
   #   end
   #
-  # This migration will add a boolean flag to the accounts table and remove it
-  # if you're backing out of the migration. It shows how all migrations have
-  # two methods +up+ and +down+ that describes the transformations
-  # required to implement or remove the migration. These methods can consist
-  # of both the migration specific methods like +add_column+ and +remove_column+,
-  # but may also contain regular Ruby code for generating data needed for the
-  # transformations.
+  # 这个迁移添加一个布尔标识位ssl_enabled，当您回滚时移除这个列。它显示了所有迁移的方式，
+  # 通过+up+和+down+描述转换。这些方法可以包括两种迁移特定方法，如+add_column+和+remove_column+，
+  # 但也可以包含用于生成所需数据的常规Ruby代码转换。
   #
-  # Example of a more complex migration that also needs to initialize data:
+  # 需要初始化数据的更复杂迁移的示例：
   #
   #   class AddSystemSettings < ActiveRecord::Migration[5.0]
   #     def up
@@ -233,50 +225,42 @@ module ActiveRecord
   #     end
   #   end
   #
-  # This migration first adds the +system_settings+ table, then creates the very
-  # first row in it using the Active Record model that relies on the table. It
-  # also uses the more advanced +create_table+ syntax where you can specify a
-  # complete table schema in one block call.
+  # 这个迁移先添加+system_settings+表，然后创建一条记录。它使用了更高级的+create_table+
+  # 语法，你可以在其中指定一个块来进行完整的表达式调用。
   #
-  # == Available transformations
+  # == Available transformations 可用的转换
   #
-  # === Creation
+  # === Creation 创建
   #
-  # * <tt>create_join_table(table_1, table_2, options)</tt>: Creates a join
-  #   table having its name as the lexical order of the first two
-  #   arguments. See
-  #   ActiveRecord::ConnectionAdapters::SchemaStatements#create_join_table for
-  #   details.
-  # * <tt>create_table(name, options)</tt>: Creates a table called +name+ and
-  #   makes the table object available to a block that can then add columns to it,
-  #   following the same format as +add_column+. See example above. The options hash
-  #   is for fragments like "DEFAULT CHARSET=UTF-8" that are appended to the create
-  #   table definition.
-  # * <tt>add_column(table_name, column_name, type, options)</tt>: Adds a new column
-  #   to the table called +table_name+
-  #   named +column_name+ specified to be one of the following types:
+  # * <tt>create_join_table(table_1, table_2, options)</tt>: 创建一个连接表，其名称为
+  #   前两个参数的词法顺序. 参见
+  #   ActiveRecord::ConnectionAdapters::SchemaStatements#create_join_table
+  # * <tt>create_table(name, options)</tt>: 创建一个名为+name+的列，并将表对象传递给
+  #   块，然后可以向其添加列，遵循与+add_column+相同的格式。见上面的例子。选项时一个Hash,
+  #   用于附加到创建的"DEFAULT CHARSET=UTF-8"之类的片段表定义。
+  # * <tt>add_column(table_name, column_name, type, options)</tt>: 添加一个新列，其中
+  #   type可指定为下列类型:
   #   <tt>:string</tt>, <tt>:text</tt>, <tt>:integer</tt>, <tt>:float</tt>,
   #   <tt>:decimal</tt>, <tt>:datetime</tt>, <tt>:timestamp</tt>, <tt>:time</tt>,
-  #   <tt>:date</tt>, <tt>:binary</tt>, <tt>:boolean</tt>. A default value can be
-  #   specified by passing an +options+ hash like <tt>{ default: 11 }</tt>.
-  #   Other options include <tt>:limit</tt> and <tt>:null</tt> (e.g.
-  #   <tt>{ limit: 50, null: false }</tt>) -- see
-  #   ActiveRecord::ConnectionAdapters::TableDefinition#column for details.
-  # * <tt>add_foreign_key(from_table, to_table, options)</tt>: Adds a new
-  #   foreign key. +from_table+ is the table with the key column, +to_table+ contains
-  #   the referenced primary key.
-  # * <tt>add_index(table_name, column_names, options)</tt>: Adds a new index
-  #   with the name of the column. Other options include
+  #   <tt>:date</tt>, <tt>:binary</tt>, <tt>:boolean</tt>. 默认值可通过+options+ hash
+  #   来传递 <tt>{ default: 11 }</tt>.
+  #   其他选项包括<tt>:limit</tt> and <tt>:null</tt> (e.g.
+  #   <tt>{ limit: 50, null: false }</tt>) -- 详见
+  #   ActiveRecord::ConnectionAdapters::TableDefinition#column.
+  # * <tt>add_foreign_key(from_table, to_table, options)</tt>: 添加一个新的外键. 
+  #   +from_table+ 是具有键列的表, +to_table+ 包含引用的主键。
+  # * <tt>add_index(table_name, column_names, options)</tt>: 添加一个新的列的索引。
+  #   其他可选项包括：
   #   <tt>:name</tt>, <tt>:unique</tt> (e.g.
   #   <tt>{ name: 'users_name_index', unique: true }</tt>) and <tt>:order</tt>
   #   (e.g. <tt>{ order: { name: :desc } }</tt>).
-  # * <tt>add_reference(:table_name, :reference_name)</tt>: Adds a new column
-  #   +reference_name_id+ by default an integer. See
-  #   ActiveRecord::ConnectionAdapters::SchemaStatements#add_reference for details.
-  # * <tt>add_timestamps(table_name, options)</tt>: Adds timestamps (+created_at+
-  #   and +updated_at+) columns to +table_name+.
+  # * <tt>add_reference(:table_name, :reference_name)</tt>: 添加新列，引用id，它默认
+  #   为证书。详见
+  #   ActiveRecord::ConnectionAdapters::SchemaStatements#add_reference.
+  # * <tt>add_timestamps(table_name, options)</tt>: 向+table_name+ 添加时间戳列 (+created_at+
+  #   and +updated_at+).
   #
-  # === Modification
+  # === Modification 修改的操作
   #
   # * <tt>change_column(table_name, column_name, type, options)</tt>:  Changes
   #   the column to a different type using the same parameters as add_column.
@@ -324,46 +308,38 @@ module ActiveRecord
   # Migrations of that kind should raise an <tt>ActiveRecord::IrreversibleMigration</tt>
   # exception in their +down+ method.
   #
-  # == Running migrations from within Rails
+  # == Running migrations from within Rails 在Rails中运行迁移
   #
-  # The Rails package has several tools to help create and apply migrations.
+  # Rails包中有几个工具可以帮助创建额应用迁移。
   #
-  # To generate a new migration, you can use
+  # 要生成新的迁移，你可以使用: 
   #   rails generate migration MyNewMigration
   #
-  # where MyNewMigration is the name of your migration. The generator will
-  # create an empty migration file <tt>timestamp_my_new_migration.rb</tt>
-  # in the <tt>db/migrate/</tt> directory where <tt>timestamp</tt> is the
-  # UTC formatted date and time that the migration was generated.
+  # MyNewMigration是您的迁移名称。生成器会在db/migrate目录中创建一个空的迁移文件，
+  # <tt>tiemstamp_my_new_migration.rb</tt>，<tt>timestamp</tt>是UTC格式的时间
+  # 和日期。
   #
-  # There is a special syntactic shortcut to generate migrations that add fields to a table.
+  # 有一个特殊的语法快捷方式可以生成向挑中添加字段的迁移。
   #
   #   rails generate migration add_fieldname_to_tablename fieldname:string
   #
-  # This will generate the file <tt>timestamp_add_fieldname_to_tablename.rb</tt>, which will look like this:
+  # 这将生成文件timestamp_add_fieldname_to_tablename.rb，如下所示：
   #   class AddFieldnameToTablename < ActiveRecord::Migration[5.0]
   #     def change
   #       add_column :tablenames, :fieldname, :string
   #     end
   #   end
   #
-  # To run migrations against the currently configured database, use
-  # <tt>rails db:migrate</tt>. This will update the database by running all of the
-  # pending migrations, creating the <tt>schema_migrations</tt> table
-  # (see "About the schema_migrations table" section below) if missing. It will also
-  # invoke the db:schema:dump task, which will update your db/schema.rb file
-  # to match the structure of your database.
+  # 要对当前配置的数据库运行迁移，请使用rails db:migrate。这将运行所有的更新数据库待定迁移，创建
+  # schema_migrations表(如果缺少，请参阅下面的"关于schema_migrations表"部分)。它也会调用
+  # db:schema:dump任务，它将会更新db/schema.rb文件匹配数据库的结构。
   #
-  # To roll the database back to a previous migration version, use
-  # <tt>rails db:rollback VERSION=X</tt> where <tt>X</tt> is the version to which
-  # you wish to downgrade. Alternatively, you can also use the STEP option if you
-  # wish to rollback last few migrations. <tt>rails db:rollback STEP=2</tt> will rollback
-  # the latest two migrations.
+  # 要将数据库回滚到之前的迁移版本，请使用rails db:rollback VERSION=X，其中X是那个你想降级的版本。
+  # 或者你可以使用STEP选项来指定希望回滚最后几次迁移。rails db:rollback STEP=2将回滚最近两次迁移。
   #
-  # If any of the migrations throw an <tt>ActiveRecord::IrreversibleMigration</tt> exception,
-  # that step will fail and you'll have some manual work to do.
+  # 如果有迁移抛出ActiveRecord::IrreversibleMigration异常，该步骤将失败，您将有一些手动工作要做。
   #
-  # == Database support
+  # == Database support 数据库支持
   #
   # Migrations are currently supported in MySQL, PostgreSQL, SQLite,
   # SQL Server, and Oracle (all supported databases except DB2).
@@ -450,20 +426,18 @@ module ActiveRecord
   # The phrase "Updating salaries..." would then be printed, along with the
   # benchmark for the block when the block completes.
   #
-  # == Timestamped Migrations
+  # == Timestamped Migrations 带时间戳的迁移
   #
-  # By default, Rails generates migrations that look like:
+  # 默认情况下，Rails生成类似的迁移:
   #
   #    20080717013526_your_migration_name.rb
   #
-  # The prefix is a generation timestamp (in UTC).
+  # 这个前缀是生成的时间戳 (in UTC).
   #
-  # If you'd prefer to use numeric prefixes, you can turn timestamped migrations
-  # off by setting:
+  # 如果您更喜欢数字前缀，则可以转换带时间戳的迁移，在application.rb中将其关闭。
   #
   #    config.active_record.timestamped_migrations = false
   #
-  # In application.rb.
   #
   # == Reversible Migrations
   #
