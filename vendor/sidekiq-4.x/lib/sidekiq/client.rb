@@ -196,6 +196,7 @@ module Sidekiq
 
     def atomic_push(conn, payloads)
       if payloads.first['at']
+        # 对于计划任务，将时间戳作为分数存入有序集合中
         conn.zadd('schedule'.freeze, payloads.map do |hash|
           at = hash.delete('at'.freeze).to_s
           [at, Sidekiq.dump_json(hash)]

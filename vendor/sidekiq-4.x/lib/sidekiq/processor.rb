@@ -36,6 +36,10 @@ module Sidekiq
       @done = false
       @job = nil
       @thread = nil
+
+      # puts "输出mgr.options"
+      # p @mgr.options
+
       @strategy = (mgr.options[:fetch] || Sidekiq::BasicFetch).new(mgr.options)
       @reloader = Sidekiq.options[:reloader]
       @executor = Sidekiq.options[:executor]
@@ -86,6 +90,7 @@ module Sidekiq
 
     def process_one
       @job = fetch
+
       if @job
         process(@job)
       end
@@ -95,6 +100,10 @@ module Sidekiq
     def get_one
       begin
         work = @strategy.retrieve_work
+
+        # puts "输出get_one work"
+        # p work
+
         (logger.info { "Redis is online, #{Time.now - @down} sec downtime" }; @down = nil) if @down
         work
       rescue Sidekiq::Shutdown
@@ -137,6 +146,9 @@ module Sidekiq
           klass  = job_hash['class'.freeze].constantize
           worker = klass.new
           worker.jid = job_hash['jid'.freeze]
+
+          # puts "输出worker"
+          # p worker
 
           stats(worker, job_hash, queue) do
             Sidekiq::Logging.with_context(log_context(job_hash)) do
@@ -190,6 +202,9 @@ module Sidekiq
     def stats(worker, job_hash, queue)
       tid = thread_identity
       WORKER_STATE[tid] = {:queue => queue, :payload => cloned(job_hash), :run_at => Time.now.to_i }
+
+      # puts "输出stats"
+      # p WORKER_STATE
 
       begin
         yield
