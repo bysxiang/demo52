@@ -516,8 +516,8 @@ module ActiveRecord
 
     MigrationFilenameRegexp = /\A([0-9]+)_([_a-z0-9]*)\.?([_a-z0-9]*)?\.rb\z/ # :nodoc:
 
-    # This class is used to verify that all migrations have been run before
-    # loading a web page if <tt>config.active_record.migration_error</tt> is set to :page_load
+    # 这个类用于验证所有迁移都已运行过。如果config.active_record.migration_error设置为:page的话，
+    # 加载一个网页来提示
     class CheckPending
       def initialize(app)
         @app = app
@@ -589,7 +589,7 @@ module ActiveRecord
       def disable_ddl_transaction!
         @disable_ddl_transaction = true
       end
-    end
+    end # Migration class << self .. end
 
     def disable_ddl_transaction # :nodoc:
       self.class.disable_ddl_transaction
@@ -930,10 +930,9 @@ module ActiveRecord
           yield
         end
       end
-  end
+  end # class Migration .. end
 
-  # MigrationProxy is used to defer loading of the actual migration classes
-  # until they are needed
+  # MigrationProxy用于延迟实际迁移类的加载。
   MigrationProxy = Struct.new(:name, :version, :filename, :scope) do
     def initialize(name, version, filename, scope)
       super
@@ -1057,6 +1056,7 @@ module ActiveRecord
       File.basename(filename).scan(Migration::MigrationFilenameRegexp).first
     end
 
+    # 从迁移文件中构造MigrationProxy对象数组，并按version来排序
     def migrations
       migrations = migration_files.map do |file|
         version, name, scope = parse_migration_filename(file)
@@ -1131,6 +1131,8 @@ module ActiveRecord
       end
   end
 
+  # 迁移执行器
+  #
   class Migrator # :nodoc:
     class << self
       attr_accessor :migrations_paths
@@ -1150,6 +1152,8 @@ module ActiveRecord
 
     self.migrations_paths = ["db/migrate"]
 
+    # direction  表示执行方法：(:up, :down等)
+    # migrations 迁移集合 
     def initialize(direction, migrations, target_version = nil)
       @direction         = direction
       @target_version    = target_version
@@ -1187,6 +1191,7 @@ module ActiveRecord
       end
     end
 
+    # 获取需要运行的迁移集合
     def runnable
       runnable = migrations[start..finish]
       if up?
@@ -1218,6 +1223,7 @@ module ActiveRecord
     private
 
       # Used for running a specific migration.
+      # 用于运行指定的迁移
       def run_without_lock
         migration = migrations.detect { |m| m.version == @target_version }
         raise UnknownMigrationVersionError.new(@target_version) if migration.nil?
@@ -1228,6 +1234,7 @@ module ActiveRecord
       end
 
       # Used for running multiple migrations up to or down to a certain value.
+      # 
       def migrate_without_lock
         if invalid_target?
           raise UnknownMigrationVersionError.new(@target_version)
@@ -1257,8 +1264,15 @@ module ActiveRecord
       end
 
       def execute_migration_in_transaction(migration, direction)
-        return if down? && !migrated.include?(migration.version.to_i)
-        return if up?   &&  migrated.include?(migration.version.to_i)
+        # 要执行down操作，migration却没执行过
+        if down? && !migrated.include?(migration.version.to_i)
+          return
+        end
+        
+        # 要执行up操作，migration已经执行过
+        if up? && migrated.include?(migration.version.to_i)
+          return
+        end
 
         Base.logger.info "Migrating to #{migration.name} (#{migration.version})" if Base.logger
 
@@ -1324,6 +1338,7 @@ module ActiveRecord
         !migration.disable_ddl_transaction && Base.connection.supports_ddl_transactions?
       end
 
+      # 是否使用协同锁
       def use_advisory_lock?
         Base.connection.supports_advisory_locks?
       end
@@ -1348,5 +1363,5 @@ module ActiveRecord
         db_name_hash = Zlib.crc32(Base.connection.current_database)
         MIGRATOR_SALT * db_name_hash
       end
-  end
+  end # class Migrator .. end
 end
