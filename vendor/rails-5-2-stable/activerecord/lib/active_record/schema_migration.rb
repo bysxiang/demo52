@@ -4,10 +4,9 @@ require "active_record/scoping/default"
 require "active_record/scoping/named"
 
 module ActiveRecord
-  # This class is used to create a table that keeps track of which migrations
-  # have been applied to a given database. When a migration is run, its schema
-  # number is inserted in to the `SchemaMigration.table_name` so it doesn't need
-  # to be executed the next time.
+  #
+  # 这个类用于追踪已运行的迁移，它创建一个表。当迁移运行，将版本信息插入。
+  # 这个类是一个模型类
   class SchemaMigration < ActiveRecord::Base # :nodoc:
     class << self
       def primary_key

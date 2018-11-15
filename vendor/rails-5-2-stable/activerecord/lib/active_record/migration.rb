@@ -1148,7 +1148,7 @@ module ActiveRecord
       def current_version
         MigrationContext.new(migrations_paths).current_version
       end
-    end
+    end # Migrator class << self .. end
 
     self.migrations_paths = ["db/migrate"]
 
@@ -1197,8 +1197,11 @@ module ActiveRecord
       if up?
         runnable.reject { |m| ran?(m) }
       else
-        # skip the last migration if we're headed down, but not ALL the way down
-        runnable.pop if target
+        # 如果执行down操作，跳过target_version(最后一条)
+        if target
+          runnable.pop
+        end
+
         runnable.find_all { |m| ran?(m) }
       end
     end
@@ -1233,8 +1236,7 @@ module ActiveRecord
         result
       end
 
-      # Used for running multiple migrations up to or down to a certain value.
-      # 
+      # 用于向上或向下运行迁移，直至到达某个值
       def migrate_without_lock
         if invalid_target?
           raise UnknownMigrationVersionError.new(@target_version)
@@ -1287,6 +1289,7 @@ module ActiveRecord
         raise StandardError, msg, e.backtrace
       end
 
+      # 获取与@target_version版本相同的迁移
       def target
         migrations.detect { |m| m.version == @target_version }
       end
@@ -1296,6 +1299,7 @@ module ActiveRecord
       end
 
       def start
+        # current (current_migration) 当前迁移
         up? ? 0 : (migrations.index(current) || 0)
       end
 
@@ -1307,6 +1311,7 @@ module ActiveRecord
         raise DuplicateMigrationVersionError.new(version) if version
       end
 
+      # 记录迁移执行后的状态到migrated中
       def record_version_state_after_migrating(version)
         if down?
           migrated.delete(version)

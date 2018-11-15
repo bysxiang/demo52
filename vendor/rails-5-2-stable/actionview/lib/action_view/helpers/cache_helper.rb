@@ -4,67 +4,57 @@ module ActionView
   # = Action View Cache Helper
   module Helpers #:nodoc:
     module CacheHelper
-      # This helper exposes a method for caching fragments of a view
-      # rather than an entire action or page. This technique is useful
-      # caching pieces like menus, lists of new topics, static HTML
-      # fragments, and so on. This method takes a block that contains
-      # the content you wish to cache.
+      # 这个帮助程序公开了一种用于缓存视图片段的方法，而不是整个action或页面。
+      # 这种技术很有用，缓存诸如菜单，新主题列表，静态HTML之类的内容碎片，等等，
+      # 此方法采用包含的块，来缓存内容。 
+      # 
+      # 最好的方法是使用可循环的基于键的缓存过期的Memcached或Redis之上，它会自动运行踢出旧
+      # 条目。
       #
-      # The best way to use this is by doing recyclable key-based cache expiration
-      # on top of a cache store like Memcached or Redis that'll automatically
-      # kick out old entries.
-      #
-      # When using this method, you list the cache dependency as the name of the cache, like so:
+      # 当使用这个方法时，您将缓存依赖项列为缓存的名称，如下所示：
       #
       #   <% cache project do %>
       #     <b>All the topics on this project</b>
       #     <%= render project.topics %>
       #   <% end %>
       #
-      # This approach will assume that when a new topic is added, you'll touch
-      # the project. The cache key generated from this call will be something like:
+      # 这种方法将假设当添加新主题时，您将触摸到这个项目。此调用生成的缓存如下：
       #
       #   views/template/action.html.erb:7a1156131a6928cb0026877f8b749ac9/projects/123
       #         ^template path           ^template tree digest            ^class   ^id
       #
-      # This cache key is stable, but it's combined with a cache version derived from the project
-      # record. When the project updated_at is touched, the #cache_version changes, even
-      # if the key stays stable. This means that unlike a traditional key-based cache expiration
-      # approach, you won't be generating cache trash, unused keys, simply because the dependent
-      # record is updated.
       #
-      # If your template cache depends on multiple sources (try to avoid this to keep things simple),
-      # you can name all these dependencies as part of an array:
+      # 这个缓存键是稳定的，但它与从项目派生的缓存版本相结合记录。当修改project的update_at时，+cache_version+
+      # 甚至会改变，如果key保持稳定。这意味着与传统的基于密钥的缓存过期方法不同，你不会生成缓存垃圾，未使用的密钥，
+      # 只是因为一来记录已更新。
+      #
+      # 如果模板缓存依赖于多个源(为了简单起见，尽量避免这种情况)，你可以将这些依赖项命名为数组的一部分:
       #
       #   <% cache [ project, current_user ] do %>
       #     <b>All the topics on this project</b>
       #     <%= render project.topics %>
       #   <% end %>
       #
-      # This will include both records as part of the cache key and updating either of them will
-      # expire the cache.
+      # 这将包括两个记录作为缓存键的一部分，并且更新它们中的任何一个将使缓存过期。
       #
       # ==== \Template digest
+      # 
+      # 添加到模板键上的模板摘要通过对整个模板文件的内容进行MD5计算。这确保当您更改模板文件时，您的缓存
+      # 自动过期。
       #
-      # The template digest that's added to the cache key is computed by taking an MD5 of the
-      # contents of the entire template file. This ensures that your caches will automatically
-      # expire when you change the template file.
+      # 注意MD5是取整个模板文件，而不仅仅是取缓存do/end调用中的内容。因此，在调用之外更改某些内容仍然有可能
+      # 使缓存过期。
       #
-      # Note that the MD5 is taken of the entire template file, not just what's within the
-      # cache do/end call. So it's possible that changing something outside of that call will
-      # still expire the cache.
+      # 此外，digestor将自动检查模板文件中显式依赖和隐式依赖，并将它们包括在摘要中：
       #
-      # Additionally, the digestor will automatically look through your template file for
-      # explicit and implicit dependencies, and include those as part of the digest.
-      #
-      # The digestor can be bypassed by passing skip_digest: true as an option to the cache call:
+      # 通过传递skip_digest: true可以跳过digestor 
       #
       #   <% cache project, skip_digest: true do %>
       #     <b>All the topics on this project</b>
       #     <%= render project.topics %>
       #   <% end %>
       #
-      # ==== Implicit dependencies
+      # ==== 隐式依赖关系
       #
       # Most template dependencies can be derived from calls to render in the template itself.
       # Here are some examples of render calls that Cache Digests knows how to decode:
