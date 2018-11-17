@@ -59,100 +59,94 @@ module ActionView
       # Most template dependencies can be derived from calls to render in the template itself.
       # Here are some examples of render calls that Cache Digests knows how to decode:
       #
+      # 大多数的模板依赖性可以从模板本身中的呈现调用中派生出来。下面是一些缓存调用的示例，这些缓存调用
+      # 知道如何解码：
+      #
       #   render partial: "comments/comment", collection: commentable.comments
       #   render "comments/comments"
       #   render 'comments/comments'
       #   render('comments/comments')
       #
-      #   render "header" translates to render("comments/header")
+      #   render "header" 转换为 render("comments/header")
       #
       #   render(@topic)         translates to render("topics/topic")
       #   render(topics)         translates to render("topics/topic")
       #   render(message.topics) translates to render("topics/topic")
       #
-      # It's not possible to derive all render calls like that, though.
-      # Here are a few examples of things that can't be derived:
+      # 但是，不可能像这样派生所有的渲染调用。以下是一些无法得出的例子：
       #
       #   render group_of_attachments
       #   render @project.documents.where(published: true).order('created_at')
       #
-      # You will have to rewrite those to the explicit form:
+      # 您必须重写为这样：
       #
       #   render partial: 'attachments/attachment', collection: group_of_attachments
       #   render partial: 'documents/document', collection: @project.documents.where(published: true).order('created_at')
       #
-      # === Explicit dependencies
+      # === 显式依赖
       #
-      # Sometimes you'll have template dependencies that can't be derived at all. This is typically
-      # the case when you have template rendering that happens in helpers. Here's an example:
+      # 有时您将拥有根本无法派生的模板依赖项。当您在帮助程序中进行模板渲染时，通常会出现这种情况。
+      # 这是一个例子:
       #
       #   <%= render_sortable_todolists @project.todolists %>
       #
-      # You'll need to use a special comment format to call those out:
+      # 你需要特殊注释格式来调用它们：
       #
       #   <%# Template Dependency: todolists/todolist %>
       #   <%= render_sortable_todolists @project.todolists %>
       #
-      # In some cases, like a single table inheritance setup, you might have
-      # a bunch of explicit dependencies. Instead of writing every template out,
-      # you can use a wildcard to match any template in a directory:
+      # 在某些情况下，比如单表继承设置，您可能有一堆显式依赖关系。而不是把每个模板都写出来
+      # ，您可以使用通配符匹配目录中的任何模板。
       #
       #   <%# Template Dependency: events/* %>
       #   <%= render_categorizable_events @person.events %>
       #
-      # This marks every template in the directory as a dependency. To find those
-      # templates, the wildcard path must be absolutely defined from <tt>app/views</tt> or paths
-      # otherwise added with +prepend_view_path+ or +append_view_path+.
-      # This way the wildcard for <tt>app/views/recordings/events</tt> would be <tt>recordings/events/*</tt> etc.
+      # 这会将目录中的每个模板标记为依赖项。找到那些模板，通配符必须从app/views或路径中绝对定义
+      # ，否则添加prepend_view_path或append_view_path。这样，app/views/recordings/evetns的
+      # 通配符将使recordings/events/*
       #
-      # The pattern used to match explicit dependencies is <tt>/# Template Dependency: (\S+)/</tt>,
-      # so it's important that you type it out just so.
-      # You can only declare one template dependency per line.
+      # 用于匹配显示依赖项的正则匹配是/# Template Dependency: (\S+)/，因此将其输入为正确的
+      # 非常重要。每行只能声明一个模板依赖项。
       #
-      # === External dependencies
+      # === 外部依赖关系
       #
-      # If you use a helper method, for example, inside a cached block and
-      # you then update that helper, you'll have to bump the cache as well.
-      # It doesn't really matter how you do it, but the MD5 of the template file
-      # must change. One recommendation is to simply be explicit in a comment, like:
+      # 如果您使用辅助方法，例如，在缓存块内部，然后你更新了那个帮助器，您也必须碰撞缓存。
+      # 它是如何做的并不重要，但模板文件的MD5必须改变。一个建议是在注释中准确表达(这样文件MD5就改变了)，
+      # 例如：
       #
       #   <%# Helper Dependency Updated: May 6, 2012 at 6pm %>
       #   <%= some_helper_method(person) %>
       #
-      # Now all you have to do is change that timestamp when the helper method changes.
+      # 现在，您要做的就是在辅助方法更改时更改该时间戳。
       #
-      # === Collection Caching
+      # === 集合缓存
       #
-      # When rendering a collection of objects that each use the same partial, a <tt>:cached</tt>
-      # option can be passed.
+      # 渲染每个使用相同部分的对象集合时，可以传递cached: true选项。
       #
-      # For collections rendered such:
+      # 对于渲染的集合
       #
       #   <%= render partial: 'projects/project', collection: @projects, cached: true %>
       #
-      # The <tt>cached: true</tt> will make Action View's rendering read several templates
-      # from cache at once instead of one call per template.
+      # 上述代码中所有的缓存模板一次性获取，速度更快。
       #
-      # Templates in the collection not already cached are written to cache.
+      # 此外，尚未缓存的模板也会写入缓存，在下次渲染时获取。
       #
-      # Works great alongside individual template fragment caching.
-      # For instance if the template the collection renders is cached like:
+      # 与单个模板片段缓存一起使用非常好。例如，如果集合呈现的模板缓存如下：
       #
       #   # projects/_project.html.erb
       #   <% cache project do %>
       #     <%# ... %>
       #   <% end %>
       #
-      # Any collection renders will find those cached templates when attempting
-      # to read multiple templates at once.
+      # 任何集合渲染都会在尝试时找到这些缓存的模板，一次读取多个模板。
       #
-      # If your collection cache depends on multiple sources (try to avoid this to keep things simple),
-      # you can name all these dependencies as part of a block that returns an array:
+      # 如果你的集合缓存依赖于多个源(尽量避免这样做以保持简单)，您可以将所有这些依赖项命名为返回
+      # 数据的块的一部分
       #
       #   <%= render partial: 'projects/project', collection: @projects, cached: -> project { [ project, current_user ] } %>
       #
-      # This will include both records as part of the cache key and updating either of them will
-      # expire the cache.
+      # 这将包括两个记录作为缓存键的一部分，并且更新它们中的任何一个将使缓存过期。
+      #
       def cache(name = {}, options = {}, &block)
         if controller.respond_to?(:perform_caching) && controller.perform_caching
           name_options = options.slice(:skip_digest, :virtual_path)
