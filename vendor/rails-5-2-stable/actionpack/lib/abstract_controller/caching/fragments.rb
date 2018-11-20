@@ -52,12 +52,9 @@ module AbstractController
         end
       end # ClassMethods .. end
 
-      # Given a key (as described in +expire_fragment+), returns
-      # a key suitable for use in reading, writing, or expiring a
-      # cached fragment. All keys begin with <tt>views/</tt>,
-      # followed by any controller-wide key prefix values, ending
-      # with the specified +key+ value. The key is expanded using
-      # ActiveSupport::Cache.expand_cache_key.
+      # 给定一个键(如expire_fragment中所述)，返回适合阅读，写入或过期的缓存
+      # 片段键。所有的键都以views开头，然后是任何控制器范围的前缀值，结束部分
+      # 是指定的key值。键时通过ActiveSupport::Cache.expand_cache_key来生成的。
       def fragment_cache_key(key)
         ActiveSupport::Deprecation.warn(<<-MSG.squish)
           Calling fragment_cache_key directly is deprecated and will be removed in Rails 6.0.
@@ -80,21 +77,21 @@ module AbstractController
         [ :views, (ENV["RAILS_CACHE_ID"] || ENV["RAILS_APP_VERSION"]), *head, *tail ].compact
       end
 
-      # Writes +content+ to the location signified by
-      # +key+ (see +expire_fragment+ for acceptable formats).
+      # 将内容写入key表示的位置
+      # (请参阅expire_fragment方法以获取可接受的格式)
       def write_fragment(key, content, options = nil)
-        return content unless cache_configured?
-
-        key = combined_fragment_cache_key(key)
-        instrument_fragment_cache :write_fragment, key do
-          content = content.to_str
-          cache_store.write(key, content, options)
+        if cache_configured?
+          key = combined_fragment_cache_key(key)
+          instrument_fragment_cache :write_fragment, key do
+            content = content.to_str
+            cache_store.write(key, content, options)
+          end
+          content
         end
-        content
       end
 
-      # Reads a cached fragment from the location signified by +key+
-      # (see +expire_fragment+ for acceptable formats).
+      # 读取key缓存的片段
+      # (请参阅expire_fragment方法以获取可接受的格式)
       def read_fragment(key, options = nil)
         if cache_configured?
           key = combined_fragment_cache_key(key)
@@ -105,14 +102,15 @@ module AbstractController
         end
       end
 
-      # Check if a cached fragment from the location signified by
-      # +key+ exists (see +expire_fragment+ for acceptable formats).
+      # 根据key检查是否缓存存在
+      # (请参阅expire_fragment方法以获取可接受的格式)
       def fragment_exist?(key, options = nil)
-        return unless cache_configured?
-        key = combined_fragment_cache_key(key)
+        if cache_configured?
+          key = combined_fragment_cache_key(key)
 
-        instrument_fragment_cache :exist_fragment?, key do
-          cache_store.exist?(key, options)
+          instrument_fragment_cache :exist_fragment?, key do
+            cache_store.exist?(key, options)
+          end
         end
       end
 

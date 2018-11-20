@@ -158,7 +158,7 @@ module ActionView
         nil
       end
 
-      # Cache fragments of a view if +condition+ is true
+      # 如果条件为true, 则缓存视图的片段
       #
       #   <% cache_if admin?, project do %>
       #     <b>All the topics on this project</b>
@@ -174,8 +174,8 @@ module ActionView
         nil
       end
 
-      # Cache fragments of a view unless +condition+ is true
-      #
+      # 如果条件为true，缓存片段
+       #
       #   <% cache_unless admin?, project do %>
       #     <b>All the topics on this project</b>
       #     <%= render project.topics %>
@@ -184,13 +184,12 @@ module ActionView
         cache_if !condition, name, options, &block
       end
 
-      # This helper returns the name of a cache key for a given fragment cache
-      # call. By supplying +skip_digest:+ true to cache, the digestion of cache
-      # fragments can be manually bypassed. This is useful when cache fragments
-      # cannot be manually expired unless you know the exact key which is the
-      # case when using memcached.
+      # 这个助手方法返回给定片段缓存的键名称。通过提供skip_digest: true可以绕过
+      # digestion。这在使用memcached的情况下非常有用，因为如果不知道确切键，是无法
+      # 使缓存过期的。
       #
       # The digest will be generated using +virtual_path:+ if it is provided.
+      # 如果提供了virtual_path，将使用它生成摘要
       #
       def cache_fragment_name(name = {}, skip_digest: nil, virtual_path: nil)
         if skip_digest
@@ -220,10 +219,14 @@ module ActionView
 
       def fragment_for(name = {}, options = nil, &block)
         if content = read_fragment_for(name, options)
-          @view_renderer.cache_hits[@virtual_path] = :hit if defined?(@view_renderer)
+          if defined?(@view_renderer)
+            @view_renderer.cache_hits[@virtual_path] = :hit
+          end
           content
         else
-          @view_renderer.cache_hits[@virtual_path] = :miss if defined?(@view_renderer)
+          if defined?(@view_renderer)
+            @view_renderer.cache_hits[@virtual_path] = :miss
+          end
           write_fragment_for(name, options, &block)
         end
       end

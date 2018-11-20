@@ -112,16 +112,14 @@ module ActiveSupport
         end
     end
 
-    # An abstract cache store class. There are multiple cache store
-    # implementations, each having its own additional features. See the classes
-    # under the ActiveSupport::Cache module, e.g.
-    # ActiveSupport::Cache::MemCacheStore. MemCacheStore is currently the most
-    # popular cache store for large production websites.
+    # 这个类是缓存的抽象类。有多个缓存存储实现，每个都有自己的附加功能。参考
+    # ActiveSupport::Cache模块下，例如MemCacheStore。MemCacheStore是目前最多的
+    # 大型网站的热门存储产品。
     #
-    # Some implementations may not support all methods beyond the basic cache
-    # methods of +fetch+, +write+, +read+, +exist?+, and +delete+.
+    # 某些实现可能不支持基本缓存之外的所有方法
+    # (除：fetch, writer, read, exists和delete)
     #
-    # ActiveSupport::Cache::Store can store any serializable Ruby object.
+    # Store能够存储所有可序列号的Ruby对象
     #
     #   cache = ActiveSupport::Cache::MemoryStore.new
     #
@@ -129,31 +127,25 @@ module ActiveSupport
     #   cache.write('city', "Duckburgh")
     #   cache.read('city')   # => "Duckburgh"
     #
-    # Keys are always translated into Strings and are case sensitive. When an
-    # object is specified as a key and has a +cache_key+ method defined, this
-    # method will be called to define the key.  Otherwise, the +to_param+
-    # method will be called. Hashes and Arrays can also be used as keys. The
-    # elements will be delimited by slashes, and the elements within a Hash
-    # will be sorted by key so they are consistent.
+    # 密钥总是被翻译成字符串并区分大小写。当一个object被指定为一个键并且定义了一个
+    # cache_key方法，这个将调用cache_key生成密钥，否则使用to_param方法生成。散列
+    # 和数组也可用作键。该元素将由斜杠和哈希中的元素分割，将按键排序，以便保持它们
+    # 一致.
     #
     #   cache.read('city') == cache.read(:city)   # => true
     #
-    # Nil values can be cached.
+    # Nil值可以被缓存。
+    # 
+    # 如果你的缓存位于共享基础结构上，则可以定义为缓存条目定义命名空间。如果定义了命名空间
+    # ，它将作为每个键的前缀。命名空间可以是静态值，也可以是Proc。如果它是Proc，它将在每个
+    # 键被评估时调用，以便你可以使用它来使密钥无效。
     #
-    # If your cache is on a shared infrastructure, you can define a namespace
-    # for your cache entries. If a namespace is defined, it will be prefixed on
-    # to every key. The namespace can be either a static value or a Proc. If it
-    # is a Proc, it will be invoked when each key is evaluated so that you can
-    # use application logic to invalidate keys.
+    #   cache.namespace = -> { @last_mod_time }  # 为变量设置命名空间
+    #   @last_mod_time = Time.now  # 这间接改变了命名空间，整个缓存将无效
     #
-    #   cache.namespace = -> { @last_mod_time }  # Set the namespace to a variable
-    #   @last_mod_time = Time.now  # Invalidate the entire cache by changing namespace
-    #
-    # Cached data larger than 1kB are compressed by default. To turn off
-    # compression, pass <tt>compress: false</tt> to the initializer or to
-    # individual +fetch+ or +write+ method calls. The 1kB compression
-    # threshold is configurable with the <tt>:compress_threshold</tt> option,
-    # specified in bytes.
+    # 默认情况下，压缩大于1KB的缓存数据。要关闭它，可以传递compress: false给初始化器或
+    # 是fetch或write方法调用。1KB压缩的阈值可以通过:compress_threshold选项配置，单位
+    # 是字节。
     class Store
       cattr_accessor :logger, instance_writer: true
 
@@ -177,20 +169,19 @@ module ActiveSupport
           end
       end
 
-      # Creates a new cache. The options will be passed to any write method calls
-      # except for <tt>:namespace</tt> which can be used to set the global
-      # namespace for the cache.
+      # 创建一个新的cache。除了:namespace(它用于设置全局缓存的命名空间)，
+      # options将传递给任何write方法调用
       def initialize(options = nil)
         @options = options ? options.dup : {}
       end
 
-      # Silences the logger.
+      # 使logger安静
       def silence!
         @silence = true
         self
       end
 
-      # Silences the logger within a block.
+      # 使logger在一个块中安静
       def mute
         previous_silence, @silence = defined?(@silence) && @silence, true
         yield
@@ -198,8 +189,7 @@ module ActiveSupport
         @silence = previous_silence
       end
 
-      # Fetches data from the cache, using the given key. If there is data in
-      # the cache with the given key, then that data is returned.
+      # 使用给定密钥从缓存中获取数据。如果key对应存在缓存，然后返回数据。
       #
       # If there is no such data in the cache (a cache miss), then +nil+ will be
       # returned. However, if a block has been passed, that block will be passed
