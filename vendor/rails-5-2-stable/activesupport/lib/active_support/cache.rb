@@ -191,11 +191,8 @@ module ActiveSupport
 
       # 使用给定密钥从缓存中获取数据。如果key对应存在缓存，然后返回数据。
       #
-      # If there is no such data in the cache (a cache miss), then +nil+ will be
-      # returned. However, if a block has been passed, that block will be passed
-      # the key and executed in the event of a cache miss. The return value of the
-      # block will be written to the cache under the given cache key, and that
-      # return value will be returned.
+      # 如果缓存中没有这样的数据(缓存未命中)，那么将返回nil。但是，如果传递了一个块，那么
+      # 将会在缓存未命中时执行。而且返回值，将会被存储到键上。
       #
       #   cache.write('today', 'Monday')
       #   cache.fetch('today')  # => "Monday"
@@ -206,53 +203,40 @@ module ActiveSupport
       #   end
       #   cache.fetch('city')   # => "Duckburgh"
       #
-      # You may also specify additional options via the +options+ argument.
-      # Setting <tt>force: true</tt> forces a cache "miss," meaning we treat
-      # the cache value as missing even if it's present. Passing a block is
-      # required when +force+ is true so this always results in a cache write.
+      # 您还可以通过options参数指定其他选项。设置force: true强制缓存miss，这意味着
+      # 即使缓存存在也会丢失。通过传递一个块指定force: true时，这导致缓存总是写入。
       #
       #   cache.write('today', 'Monday')
       #   cache.fetch('today', force: true) { 'Tuesday' } # => 'Tuesday'
       #   cache.fetch('today', force: true) # => ArgumentError
       #
-      # The +:force+ option is useful when you're calling some other method to
-      # ask whether you should force a cache write. Otherwise, it's clearer to
-      # just call <tt>Cache#write</tt>.
+      # force选项在调用其他方法时非常有用，询问是否应该强制缓存写入。否则，就更清楚了，
+      # 应该调用Cache#write方法。
       #
-      # Setting <tt>compress: false</tt> disables compression of the cache entry.
+      # 设置compress: false，将禁用缓存压缩
       #
-      # Setting <tt>:expires_in</tt> will set an expiration time on the cache.
-      # All caches support auto-expiring content after a specified number of
-      # seconds. This value can be specified as an option to the constructor
-      # (in which case all entries will be affected), or it can be supplied to
-      # the +fetch+ or +write+ method to effect just one entry.
+      # 设置expires_in将在缓存上设置到期时间。所有缓存都支持指定数量的自动过期内容，
+      # 单位为秒。可以将此值指定为构造函数的选项(在这种情况下，所有条目都会受到影响),
+      # 或者作为fetch或write的选项，只影响一个条目。
       #
       #   cache = ActiveSupport::Cache::MemoryStore.new(expires_in: 5.minutes)
-      #   cache.write(key, value, expires_in: 1.minute) # Set a lower value for one entry
+      #   cache.write(key, value, expires_in: 1.minute) # 为一个条目设置较低的值
       #
-      # Setting <tt>:version</tt> verifies the cache stored under <tt>name</tt>
-      # is of the same version. nil is returned on mismatches despite contents.
-      # This feature is used to support recyclable cache keys.
+      # 设置:version验证存储在name下的缓存是否是同一个版本。当内容不匹配时返回nil，该
+      # 特性用于支持可回收的缓存键。
       #
-      # Setting <tt>:race_condition_ttl</tt> is very useful in situations where
-      # a cache entry is used very frequently and is under heavy load. If a
-      # cache expires and due to heavy load several different processes will try
-      # to read data natively and then they all will try to write to cache. To
-      # avoid that case the first process to find an expired cache entry will
-      # bump the cache expiration time by the value set in <tt>:race_condition_ttl</tt>.
-      # Yes, this process is extending the time for a stale value by another few
-      # seconds. Because of extended life of the previous cache, other processes
-      # will continue to use slightly stale data for a just a bit longer. In the
-      # meantime that first process will go ahead and will write into cache the
-      # new value. After that all the processes will start getting the new value.
-      # The key is to keep <tt>:race_condition_ttl</tt> small.
+      # 设置:race_condition_ttl在以下情况下非常有用，缓存条目经常使用且负载很重。如果
+      # 一个缓存过期，由于负载过重，几个不同的进程会尝试本地读取数据然后它们都会尝试写入
+      # 缓存。要避免这种情况，第一个找到过期缓存条目的进程会这样做，通过
+      # :race_condition_ttl设置的值来增加缓存过期时间。是的，这个过程将过期值的时间再
+      # 延长一些时间。由于前一个缓存的延长寿命，其他进程将继续使用稍微陈旧的数据稍延长一点。
+      # 与此同时，第一个进程将继续，并将写入缓存新值。之后，所有进程将开始获取新值关键是
+      # 保持:race_condition_ttl小。
       #
-      # If the process regenerating the entry errors out, the entry will be
-      # regenerated after the specified number of seconds. Also note that the
-      # life of stale cache is extended only if it expired recently. Otherwise
-      # a new value is generated and <tt>:race_condition_ttl</tt> does not play
-      # any role.
-      #
+      # 如果流程重新生成条目错误，则条目将被删除，在指定的秒数后重新生成。此外，请注意
+      # 过期缓存的声明只有在最近过期时才会被延长。否则生成一个新值，:race_condition_ttl
+      # 不播放任何角色。
+      # 
       #   # Set all values to expire after one minute.
       #   cache = ActiveSupport::Cache::MemoryStore.new(expires_in: 1.minute)
       #
@@ -275,7 +259,7 @@ module ActiveSupport
       #   end
       #
       #   cache.fetch('foo') # => "original value"
-      #   sleep 10 # First thread extended the life of cache by another 10 seconds
+      #   sleep 10 # 第一个线程将缓存的生命周期延长了10s
       #   cache.fetch('foo') # => "new value 1"
       #   val_1 # => "new value 1"
       #   val_2 # => "original value"
@@ -300,12 +284,20 @@ module ActiveSupport
 
           entry = nil
           instrument(:read, name, options) do |payload|
-            cached_entry = read_entry(key, options) unless options[:force]
+            if ! options[:force]
+              cached_entry = read_entry(key, options)
+            end
             entry = handle_expired_entry(cached_entry, key, options)
-            entry = nil if entry && entry.mismatched?(normalize_version(name, options))
-            payload[:super_operation] = :fetch if payload
-            payload[:hit] = !!entry if payload
-          end
+            if entry && entry.mismatched?(normalize_version(name, options))
+              entry = nil
+            end
+            if payload
+              payload[:super_operation] = :fetch
+            end
+            if payload
+              payload[:hit] = !!entry
+            end
+          end # instrument .. end
 
           if entry
             get_entry_value(entry, name, options)
