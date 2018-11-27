@@ -681,27 +681,25 @@ module ActiveSupport
         end
     end
 
-    # This class is used to represent cache entries. Cache entries have a value, an optional
-    # expiration time, and an optional version. The expiration time is used to support the :race_condition_ttl option
-    # on the cache. The version is used to support the :version option on the cache for rejecting
-    # mismatches.
-    #
-    # Since cache entries in most instances will be serialized, the internals of this class are highly optimized
-    # using short instance variable names that are lazily defined.
+    # 这个类用于表示缓存条目。缓存条目具有值，可选到期时间与版本。到期时间用于支持:race_condition_ttl选项。
+    # 版本用于支持缓存上的:version选项，以拒绝不匹配的情况。
+    # 
+    # 由于大多数实例中的缓存条目将被序列化，因此该类的内部结构将使用延迟定义的简短实例变量名进行高度优化。
     class Entry # :nodoc:
       attr_reader :version
 
       DEFAULT_COMPRESS_LIMIT = 1.kilobyte
 
-      # Creates a new cache entry for the specified value. Options supported are
-      # +:compress+, +:compress_threshold+, +:version+ and +:expires_in+.
+      # 为指定的值创建新的缓存条目。支持的选项有:compress, :compress_threshold, :version和:expires_in。
       def initialize(value, compress: true, compress_threshold: DEFAULT_COMPRESS_LIMIT, version: nil, expires_in: nil, **)
         @value      = value
         @version    = version
         @created_at = Time.now.to_f
         @expires_in = expires_in && expires_in.to_f
 
-        compress!(compress_threshold) if compress
+        if compress
+          compress!(compress_threshold)
+        end
       end
 
       def value
@@ -712,8 +710,7 @@ module ActiveSupport
         @version && version && @version != version
       end
 
-      # Checks if the entry is expired. The +expires_in+ parameter can override
-      # the value set when the entry was created.
+      # 检查条目是否过期，可以在创建条目时设置expires_in参数。
       def expired?
         @expires_in && @created_at + @expires_in <= Time.now.to_f
       end
@@ -730,8 +727,7 @@ module ActiveSupport
         end
       end
 
-      # Returns the size of the cached value. This could be less than
-      # <tt>value.size</tt> if the data is compressed.
+      # 返回缓存值的大小。如果启用了压缩，它可能小于实际值。
       def size
         case value
         when NilClass
@@ -743,8 +739,7 @@ module ActiveSupport
         end
       end
 
-      # Duplicates the value in a class. This is used by cache implementations that don't natively
-      # serialize entries to protect against accidental cache modifications.
+      # 复制类中的值。缓存实现使用此方法，这些实现不会本机序列化条目，以防止意外的缓存修改。
       def dup_value!
         if @value && !compressed? && !(@value.is_a?(Numeric) || @value == true || @value == false)
           if @value.is_a?(String)
@@ -785,6 +780,6 @@ module ActiveSupport
         def uncompress(value)
           Marshal.load(Zlib::Inflate.inflate(value))
         end
-    end
+    end # class Entry .. end
   end
 end
