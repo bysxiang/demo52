@@ -3,16 +3,16 @@
 require "active_support/core_ext/module/delegation"
 
 module ActiveSupport
-  # NOTE: This approach has been deprecated for end-user code in favor of {thread_mattr_accessor}[rdoc-ref:Module#thread_mattr_accessor] and friends.
-  # Please use that approach instead.
+  # 注意，对于最终用户代码，不推荐使用这种此方法，而使用(thread_mattr_accessor)[rdoc-ref:Module#thread_mattr_accessor]
+  # 更友好。 请改用这种方法。
   #
-  # This module is used to encapsulate access to thread local variables.
+  # 这个模块用于封装对线程局部变量的访问。
   #
-  # Instead of polluting the thread locals namespace:
+  # 而不是污染线程本地命名空间
   #
   #   Thread.current[:connection_handler]
   #
-  # you define a class that extends this module:
+  # 您定义了一个继承此模块的类
   #
   #   module ActiveRecord
   #     class RuntimeRegistry
@@ -22,22 +22,26 @@ module ActiveSupport
   #     end
   #   end
   #
-  # and invoke the declared instance accessors as class methods. So
+  # 并将声明的实例方法访问器作为类方法调用。所以：
   #
   #   ActiveRecord::RuntimeRegistry.connection_handler = connection_handler
   #
-  # sets a connection handler local to the current thread, and
+  # 设置当前线程的本地连接处理程序，和
   #
   #   ActiveRecord::RuntimeRegistry.connection_handler
   #
-  # returns a connection handler local to the current thread.
+  # 返回当前线程的本地连接处理程序
   #
   # This feature is accomplished by instantiating the class and storing the
   # instance as a thread local keyed by the class name. In the example above
   # a key "ActiveRecord::RuntimeRegistry" is stored in <tt>Thread.current</tt>.
   # The class methods proxy to said thread local instance.
   #
-  # If the class has an initializer, it must accept no arguments.
+  # 该特性通过实例化类和存储实例的类名在线程本地存储中。在上面的例子中，一个键
+  # "ActiveRecord::RuntimeRegistry"存储在Thread.current中。类方法代理到上述线程
+  # 本地实例。
+  #
+  # 如果类有初始化器，它必须不接受参数。
   module PerThreadRegistry
     def self.extended(object)
       object.instance_variable_set "@per_thread_registry_key", object.name.freeze
@@ -49,9 +53,9 @@ module ActiveSupport
 
     private
       def method_missing(name, *args, &block)
-        # Caches the method definition as a singleton method of the receiver.
+        # 将方法定义缓存接收器的单例方法。
         #
-        # By letting #delegate handle it, we avoid an enclosure that'll capture args.
+        # 通过#delegate来处理它，我们避免捕获参数。
         singleton_class.delegate name, to: :instance
 
         send(name, *args, &block)

@@ -52,7 +52,7 @@ module ActiveSupport
       #
       #   ActiveSupport::Cache.lookup_store(MyOwnCacheStore.new)
       #   # => returns MyOwnCacheStore.new
-      def lookup_store(*store_option)
+      def _store(*store_option)
         store, *parameters = *Array.wrap(store_option).flatten
 
         case store
@@ -237,7 +237,7 @@ module ActiveSupport
       # 过期缓存的声明只有在最近过期时才会被延长。否则生成一个新值，:race_condition_ttl
       # 不播放任何角色。
       # 
-      #   # Set all values to expire after one minute.
+      #   # 设置所有值的过期时间为1分钟
       #   cache = ActiveSupport::Cache::MemoryStore.new(expires_in: 1.minute)
       #
       #   cache.write('foo', 'original value')
@@ -264,13 +264,11 @@ module ActiveSupport
       #   val_1 # => "new value 1"
       #   val_2 # => "original value"
       #
-      # Other options will be handled by the specific cache store implementation.
-      # Internally, #fetch calls #read_entry, and calls #write_entry on a cache
-      # miss. +options+ will be passed to the #read and #write calls.
+      # 其他的缓存选项将由特定的缓存存储实现来处理。在内部，fetch调用read_entry，并在缓存
+      # 上调用write_entry和option被传递到read和write调用。
       #
-      # For example, MemCacheStore's #write method supports the +:raw+
-      # option, which tells the memcached server to store all values as strings.
-      # We can use this option with #fetch too:
+      # 例如，MemCacheStore的write方法支持:raw选项，它告诉memcached服务器将所有值存储
+      # 为字符串。我们也可以在fetch中使用这个选项：
       #
       #   cache = ActiveSupport::Cache::MemCacheStore.new
       #   cache.fetch("foo", force: true, raw: true) do
@@ -311,14 +309,12 @@ module ActiveSupport
         end
       end
 
-      # Reads data from the cache, using the given key. If there is data in
-      # the cache with the given key, then that data is returned. Otherwise,
-      # +nil+ is returned.
+      # 使用给定键从缓存中读取数据。如果有数据，则返回数据，否则返回nil。
       #
-      # Note, if data was written with the <tt>:expires_in<tt> or <tt>:version</tt> options,
-      # both of these conditions are applied before the data is returned.
+      # 记住，如果数据使用expires_in或version选项，在返回数据之前应用这两个条件。
+      # 其中expires_in有缓存实现处理。version由Store类处理。
       #
-      # Options are passed to the underlying cache implementation.
+      # options被传递到底层缓存实现。
       def read(name, options = nil)
         options = merged_options(options)
         key     = normalize_key(name, options)
@@ -330,17 +326,25 @@ module ActiveSupport
           if entry
             if entry.expired?
               delete_entry(key, options)
-              payload[:hit] = false if payload
+              if payload
+                payload[:hit] = false
+              end
               nil
             elsif entry.mismatched?(version)
-              payload[:hit] = false if payload
+              if payload
+                payload[:hit] = false
+              end
               nil
             else
-              payload[:hit] = true if payload
+              if payload
+                payload[:hit] = true
+              end
               entry.value
             end
           else
-            payload[:hit] = false if payload
+            if payload
+              payload[:hit] = false
+            end
             nil
           end
         end
@@ -654,8 +658,7 @@ module ActiveSupport
           if entry && entry.expired?
             race_ttl = options[:race_condition_ttl].to_i
             if (race_ttl > 0) && (Time.now.to_f - entry.expires_at <= race_ttl)
-              # When an entry has a positive :race_condition_ttl defined, put the stale entry back into the cache
-              # for a brief period while the entry is being recalculated.
+              # 当条目定义了一个正数:race_condition_ttl时，重新计算条目时，将陈旧条目暂时放回缓存中。
               entry.expires_at = Time.now + race_ttl
               write_entry(key, entry, expires_in: race_ttl * 2)
             else
@@ -679,7 +682,7 @@ module ActiveSupport
           write(name, result, options)
           result
         end
-    end
+    end # class Store .. end
 
     # 这个类用于表示缓存条目。缓存条目具有值，可选到期时间与版本。到期时间用于支持:race_condition_ttl选项。
     # 版本用于支持缓存上的:version选项，以拒绝不匹配的情况。
@@ -719,6 +722,7 @@ module ActiveSupport
         @expires_in ? @created_at + @expires_in : nil
       end
 
+      # 修改过期时间，将会修改@expires_in的值
       def expires_at=(value)
         if value
           @expires_in = value.to_f - @created_at

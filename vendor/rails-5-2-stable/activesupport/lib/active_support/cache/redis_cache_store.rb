@@ -32,16 +32,14 @@ module ActiveSupport
 
     # Redis cache store.
     #
-    # Deployment note: Take care to use a *dedicated Redis cache* rather
-    # than pointing this at your existing Redis server. It won't cope well
-    # with mixed usage patterns and it won't expire cache entries by default.
+    # 部署注意：注意使用专用的Redis缓存，而不是指向您现有的Redis服务器。它不能很好的
+    # 应付使用混合混合使用模式，默认情况下不会过期缓存条目。
     #
     # Redis cache server setup guide: https://redis.io/topics/lru-cache
     #
-    # * Supports vanilla Redis, hiredis, and Redis::Distributed.
-    # * Supports Memcached-like sharding across Redises with Redis::Distributed.
-    # * Fault tolerant. If the Redis server is unavailable, no exceptions are
-    #   raised. Cache fetches are all misses and writes are dropped.
+    # * 支持 vanilla Redis, hiredis, and Redis::Distributed.
+    # * 使用Redis::Distributed支持Redis上的类似Memcached的分片
+    # * 容错性- 如果Redis服务器不可用，则没有异常抛出。缓存获取都是未命中，写入都被删除。
     # * Local cache. Hot in-memory primary cache within block/middleware scope.
     # * +read_multi+ and +write_multi+ support for Redis mget/mset. Use Redis::Distributed
     #   4.0.1+ for distributed mget support.

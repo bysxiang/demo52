@@ -7,13 +7,12 @@ require "active_support/per_thread_registry"
 module ActiveSupport
   module Cache
     module Strategy
-      # Caches that implement LocalCache will be backed by an in-memory cache for the
-      # duration of a block. Repeated calls to the cache for the same key will hit the
-      # in-memory cache for faster access.
+      # 实现LocalCache的缓存将在块的持续时间内由内存支持。对于相同键重复调用缓存将会命中以获得
+      # 更快的访问速度。
       module LocalCache
         autoload :Middleware, "active_support/cache/strategy/local_cache_middleware"
 
-        # Class for storing and registering the local caches.
+        # 这个类用来存储和注册本地缓存
         class LocalCacheRegistry # :nodoc:
           extend ActiveSupport::PerThreadRegistry
 
@@ -29,19 +28,23 @@ module ActiveSupport
             @registry[local_cache_key] = value
           end
 
-          def self.set_cache_for(l, v); instance.set_cache_for l, v; end
-          def self.cache_for(l); instance.cache_for l; end
-        end
+          def self.set_cache_for(l, v)
+            instance.set_cache_for(l, v) 
+          end
 
-        # Simple memory backed cache. This cache is not thread safe and is intended only
-        # for serving as a temporary memory cache for a single thread.
+          def self.cache_for(l)
+            instance.cache_for(l)
+          end
+        end # LocalCacheRegistry .. end
+
+        # 简单的内存支持缓存。该缓存不是线程安全的，只打算用作单个线程的临时内存缓存。
         class LocalStore < Store
           def initialize
             super
             @data = {}
           end
 
-          # Don't allow synchronizing since it isn't thread safe.
+          # 不要允许同步操作，因为它不是线程安全的。
           def synchronize # :nodoc:
             yield
           end
@@ -77,7 +80,7 @@ module ActiveSupport
           def fetch_entry(key, options = nil) # :nodoc:
             @data.fetch(key) { @data[key] = yield }
           end
-        end
+        end # LocalStore .. end
 
         # Use a local cache for the duration of block.
         def with_local_cache
