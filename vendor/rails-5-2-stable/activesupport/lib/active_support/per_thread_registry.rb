@@ -42,21 +42,29 @@ module ActiveSupport
   # 本地实例。
   #
   # 如果类有初始化器，它必须不接受参数。
+  #
+  # 备注，它在每个继承此模块的类上，将实例方法代理为类方法，将其存储Thread.current中
+  # 这个类实现了instance方法，它使类的实例存储与TLS上，并且会代理实例类方法的访问
+  # (实例方法同时成为类方法)。
   module PerThreadRegistry
     def self.extended(object)
       object.instance_variable_set "@per_thread_registry_key", object.name.freeze
     end
 
     def instance
+      puts "进入instance"
       Thread.current[@per_thread_registry_key] ||= new
     end
 
     private
       def method_missing(name, *args, &block)
+        puts "进入miss"
         # 将方法定义缓存接收器的单例方法。
         #
         # 通过#delegate来处理它，我们避免捕获参数。
         singleton_class.delegate name, to: :instance
+
+        puts "代理完毕, #{self}"
 
         send(name, *args, &block)
       end

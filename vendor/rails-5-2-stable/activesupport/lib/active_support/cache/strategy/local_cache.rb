@@ -28,10 +28,12 @@ module ActiveSupport
             @registry[local_cache_key] = value
           end
 
+          # 代理到#set_cache_for
           def self.set_cache_for(l, v)
-            instance.set_cache_for(l, v) 
+            instance.set_cache_for(l, v)
           end
 
+          # 代理到#cache_for
           def self.cache_for(l)
             instance.cache_for(l)
           end
