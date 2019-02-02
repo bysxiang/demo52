@@ -150,6 +150,9 @@ module ActionView
       def cache(name = {}, options = {}, &block)
         if controller.respond_to?(:perform_caching) && controller.perform_caching
           name_options = options.slice(:skip_digest, :virtual_path)
+          puts "输出name_options"
+          p name_options
+          p options
           safe_concat(fragment_for(cache_fragment_name(name, name_options), options, &block))
         else
           yield
@@ -204,17 +207,24 @@ module ActionView
       def fragment_name_with_digest(name, virtual_path)
         virtual_path ||= @virtual_path
 
+        puts "输出name, #{name}"
+
+        return_val = nil
         if virtual_path
           name = controller.url_for(name).split("://").last if name.is_a?(Hash)
 
           if digest = Digestor.digest(name: virtual_path, finder: lookup_context, dependencies: view_cache_dependencies).presence
-            [ "#{virtual_path}:#{digest}", name ]
+            return_val = [ "#{virtual_path}:#{digest}", name ]
           else
-            [ virtual_path, name ]
+            return_val = [ virtual_path, name ]
           end
         else
-          name
+          return_val = name
         end
+
+        puts "输出return_val: #{return_val}"
+
+        return return_val
       end
 
       def fragment_for(name = {}, options = nil, &block)

@@ -3,6 +3,8 @@ Rails.application.routes.draw do
 
   root "welcome#index"
 
+
+
   require "sidekiq/web"
   Sidekiq::Web.use Rack::Auth::Basic do |username, password|
     username == "ybs_songshipeng" && password == "ybs4009900365"
@@ -10,4 +12,6 @@ Rails.application.routes.draw do
   mount Sidekiq::Web, at: "/sidekiq"
 
   get "/index2" => "welcome#index2"
+
+  get "/index3" => "welcome#index3"
 end

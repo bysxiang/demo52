@@ -119,7 +119,7 @@ module ActiveSupport
     # 某些实现可能不支持基本缓存之外的所有方法
     # (除：fetch, writer, read, exists和delete)
     #
-    # Store能够存储所有可序列号的Ruby对象
+    # Store能够存储所有可序列化的Ruby对象
     #
     #   cache = ActiveSupport::Cache::MemoryStore.new
     #
@@ -282,6 +282,7 @@ module ActiveSupport
 
           entry = nil
           instrument(:read, name, options) do |payload|
+            # cached_entry默认为nil
             if ! options[:force]
               cached_entry = read_entry(key, options)
             end
@@ -444,9 +445,9 @@ module ActiveSupport
         end
       end
 
-      # Returns +true+ if the cache contains an entry for the given key.
+      # 如果缓存包含给定键的条目，则返回true。
       #
-      # Options are passed to the underlying cache implementation.
+      # options将传递给底层缓存实现
       def exist?(name, options = nil)
         options = merged_options(options)
 
@@ -609,24 +610,25 @@ module ActiveSupport
           end
         end
 
-        # Expands key to be a consistent string value. Invokes +cache_key+ if
-        # object responds to +cache_key+. Otherwise, +to_param+ method will be
-        # called. If the key is a Hash, then keys will be sorted alphabetically.
+        # 将key扩展为一致的字符串。如果它响应:cache_key方法，则调用cache_key方法。
+        # 否则，调用to_param方法，如果key是一个hash，则将它的键按字母顺序排序
+        # 组成字符串,再调用to_param方法
         def expanded_key(key)
-          return key.cache_key.to_s if key.respond_to?(:cache_key)
-
-          case key
-          when Array
-            if key.size > 1
-              key = key.collect { |element| expanded_key(element) }
-            else
-              key = key.first
+          if key.respond_to?(:cache_key)
+            return key.cache_key.to_s
+          else
+            if key.is_a?(Array)
+              if key.size > 1
+                key = key.collect { |element| expanded_key(element) }
+              else
+                key = key.first
+              end
+            elsif key.is_a?(Hash)
+              key = key.sort_by { |k, _| k.to_s }.collect { |k, v| "#{k}=#{v}" }
             end
-          when Hash
-            key = key.sort_by { |k, _| k.to_s }.collect { |k, v| "#{k}=#{v}" }
-          end
 
-          key.to_param
+            return key.to_param
+          end
         end
 
         def normalize_version(key, options = nil)
@@ -709,6 +711,7 @@ module ActiveSupport
         compressed? ? uncompress(@value) : @value
       end
 
+      # 是否不匹配?
       def mismatched?(version)
         @version && version && @version != version
       end

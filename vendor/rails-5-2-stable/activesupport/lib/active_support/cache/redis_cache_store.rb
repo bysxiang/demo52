@@ -40,10 +40,10 @@ module ActiveSupport
     # * 支持 vanilla Redis, hiredis, and Redis::Distributed.
     # * 使用Redis::Distributed支持Redis上的类似Memcached的分片
     # * 容错性- 如果Redis服务器不可用，则没有异常抛出。缓存获取都是未命中，写入都被删除。
-    # * Local cache. Hot in-memory primary cache within block/middleware scope.
-    # * +read_multi+ and +write_multi+ support for Redis mget/mset. Use Redis::Distributed
-    #   4.0.1+ for distributed mget support.
-    # * +delete_matched+ support for Redis KEYS globs.
+    # * Local cache. 块和中间件scope中的缓存实现使用热内容作为主缓存。
+    # * +read_multi+ and +write_multi+ 使用Redis mget/mset来支持. 使用Redis::Distributed
+    #   4.0.1+提供分布式mget支持
+    # * +delete_matched+ 支持Redis KEYS globs.
     class RedisCacheStore < Store
       # Keys are truncated with their own SHA2 digest if they exceed 1kB
       MAX_KEY_BYTESIZE = 1024

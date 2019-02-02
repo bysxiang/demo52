@@ -3,15 +3,14 @@
 require "active_support/core_ext/array/extract_options"
 require "active_support/core_ext/regexp"
 
-# Extends the module object with class/module and instance accessors for
-# class/module attributes, just like the native attr* accessors for instance
-# attributes, but does so on a per-thread basis.
+# 扩展了Module对象，使得类/模块可以通过实例访问器访问类/模块的属性，就行访问本地attr*
+# 属性一样，但这是在每个线程的基础上。
 #
-# So the values are scoped within the Thread.current space under the class name
-# of the module.
+# 因此值的范围在模块的类名下的Thread.current空间内。
 class Module
-  # Defines a per-thread class attribute and creates class and instance reader methods.
-  # The underlying per-thread class variable is set to +nil+, if it is not previously defined.
+  # 定义每个线程的类属性，并创建类与实例读取器方法
+  # 
+  # 如果之前没有定义，则将每个线程类的底层类变量设置为Nil.
   #
   #   module Current
   #     thread_mattr_reader :user
@@ -21,15 +20,15 @@ class Module
   #   Thread.current[:attr_Current_user] = "DHH"
   #   Current.user # => "DHH"
   #
-  # The attribute name must be a valid method name in Ruby.
+  # 属性名称必须是一个有效的Ruby方法名(符合Ruby方法命名规范)。
   #
   #   module Foo
   #     thread_mattr_reader :"1_Badname"
   #   end
   #   # => NameError: invalid attribute name: 1_Badname
   #
-  # If you want to opt out of the creation of the instance reader method, pass
-  # <tt>instance_reader: false</tt> or <tt>instance_accessor: false</tt>.
+  # 如果你不想创建实例读取器方法，请通过instance_reader: false
+  # 或instance_accessor: false
   #
   #   class Current
   #     thread_mattr_reader :user, instance_reader: false
@@ -40,7 +39,9 @@ class Module
     options = syms.extract_options!
 
     syms.each do |sym|
-      raise NameError.new("invalid attribute name: #{sym}") unless /^[_A-Za-z]\w*$/.match?(sym)
+      if ! /^[_A-Za-z]\w*$/.match?(sym)
+        raise NameError.new("invalid attribute name: #{sym}")
+      end
 
       # The following generated method concatenates `name` because we want it
       # to work with inheritance via polymorphism.
@@ -50,7 +51,7 @@ class Module
         end
       EOS
 
-      unless options[:instance_reader] == false || options[:instance_accessor] == false
+      if ! options[:instance_reader] && ! options[:instance_accessor]
         class_eval(<<-EOS, __FILE__, __LINE__ + 1)
           def #{sym}
             self.class.#{sym}

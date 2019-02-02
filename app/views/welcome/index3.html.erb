@@ -1,0 +1,9 @@
+
+
+<p>index3</p>
+
+<% cache @users do %>
+  <% @users.each do |u| %>
+    <p>name: <%= u.name %></p>
+  <% end %>
+<% end %>

@@ -9,10 +9,12 @@ class WelcomeController < ApplicationController
   def index2
     xx = session[:ixx]
 
-    byebug
-
     puts "xx等于：#{xx}"
 
     render plain: "xxx"
+  end
+
+  def index3
+    @users = User.all
   end
 end

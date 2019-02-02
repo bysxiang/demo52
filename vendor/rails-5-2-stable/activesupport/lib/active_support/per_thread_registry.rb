@@ -32,11 +32,6 @@ module ActiveSupport
   #
   # 返回当前线程的本地连接处理程序
   #
-  # This feature is accomplished by instantiating the class and storing the
-  # instance as a thread local keyed by the class name. In the example above
-  # a key "ActiveRecord::RuntimeRegistry" is stored in <tt>Thread.current</tt>.
-  # The class methods proxy to said thread local instance.
-  #
   # 该特性通过实例化类和存储实例的类名在线程本地存储中。在上面的例子中，一个键
   # "ActiveRecord::RuntimeRegistry"存储在Thread.current中。类方法代理到上述线程
   # 本地实例。
@@ -52,19 +47,15 @@ module ActiveSupport
     end
 
     def instance
-      puts "进入instance"
       Thread.current[@per_thread_registry_key] ||= new
     end
 
     private
       def method_missing(name, *args, &block)
-        puts "进入miss"
         # 将方法定义缓存接收器的单例方法。
         #
         # 通过#delegate来处理它，我们避免捕获参数。
         singleton_class.delegate name, to: :instance
-
-        puts "代理完毕, #{self}"
 
         send(name, *args, &block)
       end

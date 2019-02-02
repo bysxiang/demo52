@@ -8,11 +8,9 @@ require "action_view/template/resolver"
 module ActionView
   # = Action View Lookup Context
   #
-  # <tt>LookupContext</tt> is the object responsible for holding all information
-  # required for looking up templates, i.e. view paths and details.
-  # <tt>LookupContext</tt> is also responsible for generating a key, given to
-  # view paths, used in the resolver cache lookup. Since this key is generated
-  # only once during the request, it speeds up all cache accesses.
+  # LookupContext是负责保存所有信息的对象，查找模板所需的信息，即查看路径和详细信息。
+  # LookupContext还负责生成一个给定的密钥查看路径，用于解析程序缓存查找。由于生成此
+  # 密钥在请求期间只有一次，它加速了所有缓存访问。
   class LookupContext #:nodoc:
     attr_accessor :prefixes, :rendered_format
 
@@ -37,7 +35,7 @@ module ActionView
       METHOD
     end
 
-    # Holds accessors for the registered details.
+    # 保留已注册信息的访问者
     module Accessors #:nodoc:
       DEFAULT_PROCS = {}
     end
@@ -73,16 +71,18 @@ module ActionView
       def self.digest_caches
         @details_keys.values
       end
-    end
+    end # DetailsKey .. end
 
-    # Add caching behavior on top of Details.
+    # 在Details之上添加缓存行为
     module DetailsCache
       attr_accessor :cache
 
       # Calculate the details key. Remove the handlers from calculation to improve performance
       # since the user cannot modify it explicitly.
       def details_key #:nodoc:
-        @details_key ||= DetailsKey.get(@details) if @cache
+        if @cache
+          @details_key ||= DetailsKey.get(@details)
+        end
       end
 
       # Temporary skip passing the details_key forward.
@@ -100,7 +100,7 @@ module ActionView
         @details_key = nil
         @details[key] = value
       end
-    end
+    end # DetailsCache .. end
 
     # Helpers related to template lookup using the lookup context information.
     module ViewPaths
@@ -213,7 +213,7 @@ module ActionView
 
         return name, prefixes
       end
-    end
+    end # M ViewPaths .. end
 
     include Accessors
     include DetailsCache
@@ -233,6 +233,7 @@ module ActionView
       details_key
     end
 
+    # 获取了所有已注册和details提供的
     def initialize_details(target, details)
       registered_details.each do |k|
         target[k] = details[k] || Accessors::DEFAULT_PROCS[k].call

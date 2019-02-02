@@ -3,11 +3,10 @@
 module ActionView #:nodoc:
   # = Action View PathSet
   #
-  # This class is used to store and access paths in Action View. A number of
-  # operations are defined so that you can search among the paths in this
-  # set and also perform operations on other +PathSet+ objects.
+  # 这个类用于在Action View中存储和访问路径。定义了大量操作，以便您可以在其中的路径
+  # 中进行搜索设置并对其他PathSet对象执行操作。
   #
-  # A +LookupContext+ will use a +PathSet+ to store the paths in its context.
+  # 一个LookupContext将使用PathSet在其上下文存储路径。
   class PathSet #:nodoc:
     include Enumerable
 
