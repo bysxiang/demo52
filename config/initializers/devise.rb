@@ -8,7 +8,7 @@ Devise.setup do |config|
   # confirmation, reset password and unlock tokens in the database.
   # Devise will use the `secret_key_base` as its `secret_key`
   # by default. You can change it below and use your own secret key.
-  # config.secret_key = 'b756bf834dc1e6d24c8a5985894e9ff79763c5b0209b97b4bcf09aee4281e6ccf9418585b3c0a04ee964cdf50801b8cd34f00b1ad9124df580c95f0618daa4ab'
+  config.secret_key = 'b756bf834dc1e6d24c8a5985894e9ff79763c5b0209b97b4bcf09aee4281e6ccf9418585b3c0a04ee964cdf50801b8cd34f00b1ad9124df580c95f0618daa4ab'
 
   # ==> Controller configuration
   # Configure the parent class to the devise controllers.
@@ -30,6 +30,8 @@ Devise.setup do |config|
   # Load and configure the ORM. Supports :active_record (default) and
   # :mongoid (bson_ext recommended) by default. Other ORMs may be
   # available as additional gems.
+  # 配置ORM
+  # 
   require 'devise/orm/active_record'
 
   # ==> Configuration for any authentication mechanism
@@ -40,7 +42,7 @@ Devise.setup do |config|
   # session. If you need permissions, you should implement that in a before filter.
   # You can also supply a hash where the value is a boolean determining whether
   # or not authentication should be aborted when the value is not present.
-  # config.authentication_keys = [:email]
+  config.authentication_keys = [:email]
 
   # Configure parameters from the request object used for authentication. Each entry
   # given should be a request method and it will automatically be passed to the

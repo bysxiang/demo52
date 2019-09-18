@@ -1,7 +1,32 @@
 Rails.application.routes.draw do
+  # devise_for :employees, controllers: {
+  #   sessions: "employees/sessions"
+  # }
+
+  devise_for :employees,
+   :path => "auth",
+   :controllers =>  {sessions: "employees/sessions"}
+   # ,
+   # :path_names => 
+   # {
+   #    :sign_in => 'login',
+   #    :sign_out => 'logout',
+   #    :password => 'secret',
+   #    :confirmation => 'verification',
+   #    :unlock => 'unblock',
+   #    :registration => 'register',
+   #    :sign_up => 'cmon_let_me_in'
+   #  }
+
+
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
 
-  root "welcome#index"
+  
+  get "main/index"
+
+  root "welcome#index"               
+
+
 
 
 

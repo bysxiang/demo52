@@ -25,6 +25,8 @@ module Demo52
     config.autoload_paths += ["#{Rails.root}/lib"]
     config.autoload_paths += ["#{Rails.root}/lib/test2"]
 
+    config.i18n.default_locale = :zh
+
     Rails.application.config.session_store :cache_store, key: 'demo_52_session'
   end
 end
