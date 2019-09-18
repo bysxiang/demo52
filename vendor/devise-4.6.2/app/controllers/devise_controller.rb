@@ -80,7 +80,7 @@ This may happen for two reasons:
 MESSAGE
   end
 
-  # Returns real navigational formats which are supported by Rails
+  # 返回rails支持的实际导航格式
   def navigational_formats
     @navigational_formats ||= Devise.navigational_formats.select { |format| Mime::EXTENSION_LOOKUP[format.to_s] }
   end
@@ -101,8 +101,17 @@ MESSAGE
   #   before_action :require_no_authentication, only: :new
   def require_no_authentication
     assert_is_devise_resource!
-    return unless is_navigational_format?
+
+    puts "进入no_auth, #{is_navigational_format?}"
+
+    if ! is_navigational_format?
+      return
+    end
+
     no_input = devise_mapping.no_input_strategies
+
+    puts "输出no_input"
+    p no_input
 
     authenticated = if no_input.present?
       args = no_input.dup.push scope: resource_name
@@ -110,6 +119,8 @@ MESSAGE
     else
       warden.authenticated?(resource_name)
     end
+
+    puts "进入require_no_authentication, #{authenticated}"
 
     if authenticated && resource = warden.user(resource_name)
       flash[:alert] = I18n.t("devise.failure.already_authenticated")
@@ -140,6 +151,8 @@ MESSAGE
   # value to populate the flash.now hash in lieu of the default flash hash (so
   # the flash message will be available to the current action instead of the
   # next action).
+  # 使用I18n设置flash消息，基于:key。默认情况下你可以使用特定资源范围设置消息，如果没有
+  # 设置消息
   # Example (i18n locale file):
   #
   #   en:
@@ -154,9 +167,13 @@ MESSAGE
   def set_flash_message(key, kind, options = {})
     message = find_message(kind, options)
     if options[:now]
-      flash.now[key] = message if message.present?
+      if message.present?
+        flash.now[key] = message
+      end
     else
-      flash[key] = message if message.present?
+      if message.present?
+        flash[key] = message
+      end
     end
   end
 

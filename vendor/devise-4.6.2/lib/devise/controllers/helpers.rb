@@ -2,7 +2,7 @@
 
 module Devise
   module Controllers
-    # Those helpers are convenience methods added to ApplicationController.
+    # 这些helpers是添加到ApplicationController的便捷方法。
     module Helpers
       extend ActiveSupport::Concern
       include Devise::Controllers::SignInOut
@@ -15,10 +15,8 @@ module Devise
       end
 
       module ClassMethods
-        # Define authentication filters and accessor helpers for a group of mappings.
-        # These methods are useful when you are working with multiple mappings that
-        # share some functionality. They are pretty much the same as the ones
-        # defined for normal mappings.
+        # 为一组映射定义身份验证筛选器和访问帮助程序。当你使用多个映射时，这些方法非常有用，它
+        # 共享一些功能。它们和这些基本一样为普通映射定义。
         #
         # Example:
         #
@@ -85,10 +83,9 @@ module Devise
         end
       end
 
-      # Define authentication filters and accessor helpers based on mappings.
-      # These filters should be used inside the controllers as before_actions,
-      # so you can control the scope of the user who should be signed in to
-      # access that specific controller/action.
+      # 根据映射定义身份验证过滤器和访问帮助程序。这些过滤器应该作为before_actions在
+      # 控制器内容使用，因此，你可以控制应该登录一访问特定控制器/action的用户范围。 
+      #
       # Example:
       #
       #   Roles:
@@ -152,9 +149,9 @@ module Devise
         is_a?(::DeviseController)
       end
 
-      # Set up a param sanitizer to filter parameters using strong_parameters. See
-      # lib/devise/parameter_sanitizer.rb for more info. Override this
-      # method in your application controller to use your own parameter sanitizer.
+      # 设置一个param sanitizer，使用strong_parameters过滤参数。查看lib/devise/
+      # parameter_sanitizer查看更多信息。在application controller中重写此方法，以使用
+      # 自己要sanitizer的参数。
       def devise_parameter_sanitizer
         @devise_parameter_sanitizer ||= Devise::ParameterSanitizer.new(resource_class, resource_name, params)
       end
@@ -164,8 +161,7 @@ module Devise
         request.env["devise.allow_params_authentication"] = true
       end
 
-      # The scope root url to be used when they're signed in. By default, it first
-      # tries to find a resource_root_path, otherwise it uses the root_path.
+      # 登录时要使用的作用域根url。默认情况下，它首先尝试查找资源的根路径，否则使用root_path。
       def signed_in_root_path(resource_or_scope)
         scope = Devise::Mapping.find_scope!(resource_or_scope)
         router_name = Devise.mappings[scope].router_name
@@ -185,14 +181,12 @@ module Devise
         end
       end
 
-      # The default url to be used after signing in. This is used by all Devise
-      # controllers and you can overwrite it in your ApplicationController to
-      # provide a custom hook for a custom resource.
+      # 登陆后要使用的默认url。这是所有devise控制器使用的，你可以在ApplicationController
+      # 中覆盖它，为自定义资源提供自定义钩子。
       #
-      # By default, it first tries to find a valid resource_return_to key in the
-      # session, then it fallbacks to resource_root_path, otherwise it uses the
-      # root path. For a user scope, you can define the default url in
-      # the following way:
+      # 默认情况下，它首先尝试在会话中查找有效的resource_return_to键，然后回退到
+      # resource_root_path，否则使用root_path。对于用户范围，你可以通过一下方式定义
+      # 默认URL:
       #
       #   get '/users' => 'users#index', as: :user_root # creates user_root_path
       #
@@ -200,8 +194,8 @@ module Devise
       #     root 'users#index' # creates user_root_path
       #   end
       #
-      # If the resource root path is not defined, root_path is used. However,
-      # if this default is not enough, you can customize it, for example:
+      # 如果未定义resource root path，则使用root_path。然而，如果此默认值不够，
+      # 你可以自定义它，例如:
       #
       #   def after_sign_in_path_for(resource)
       #     stored_location_for(resource) ||
@@ -220,6 +214,9 @@ module Devise
       # it in your ApplicationController to provide a custom hook for a custom
       # scope. Notice that differently from +after_sign_in_path_for+ this method
       # receives a symbol with the scope, and not the resource.
+      # 会话控制器用于注销用户的方法。你可以在ApplicationController中覆盖它，以便为自定义
+      # 范围提供自定义钩子。请注意，与after_sign_in_path_for不同，此方法接受带范围的符号，
+      # 而不是资源。
       #
       # By default it is the root_path.
       def after_sign_out_path_for(resource_or_scope)
@@ -249,8 +246,7 @@ module Devise
         redirect_to redirect_path
       end
 
-      # Overwrite Rails' handle unverified request to sign out all scopes,
-      # clear run strategies and remove cached variables.
+      # 覆盖Rails处理未经验证的请求以注销所有范围，清除运行策略并删除缓存的变量
       def handle_unverified_request
         super # call the default behaviour which resets/nullifies/raises
         request.env["devise.skip_storage"] = true
@@ -277,7 +273,7 @@ module Devise
         Devise.mappings.each { |_,m| instance_variable_set("@current_#{m.name}", nil) }
         super
       end
-    end
+    end # Helpers .. end
   end
 
   class MissingWarden < StandardError

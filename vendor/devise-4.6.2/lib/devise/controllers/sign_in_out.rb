@@ -2,26 +2,23 @@
 
 module Devise
   module Controllers
-    # Provide sign in and sign out functionality.
-    # Included by default in all controllers.
+    # 提供登录和注销功能。
+    # 默认情况下包含在所有控制器中。
     module SignInOut
-      # Return true if the given scope is signed in session. If no scope given, return
-      # true if any scope is signed in. This will run authentication hooks, which may
-      # cause exceptions to be thrown from this method; if you simply want to check
-      # if a scope has already previously been authenticated without running
-      # authentication hooks, you can directly call `warden.authenticated?(scope: scope)`
+      # 如果会话中给定的范围已登陆，则返回true。如果没有给定作用域，则有任何登陆的都会返回true。
+      # 这将运行身份验证钩子，可能导致从此方法抛出异常。如果你只想检查一下，如果此范围之前已经过验证
+      # 而没有运行认证钩子，你可以直接调用warden.authenticated?(scope: scope)。
       def signed_in?(scope=nil)
         [scope || Devise.mappings.keys].flatten.any? do |_scope|
           warden.authenticate?(scope: _scope)
         end
       end
 
-      # Sign in a user that already was authenticated. This helper is useful for logging
-      # users in after sign up. All options given to sign_in is passed forward
-      # to the set_user method in warden.
-      # If you are using a custom warden strategy and the timeoutable module, you have to
-      # set `env["devise.skip_timeout"] = true` in the request to use this method, like we do
-      # in the sessions controller: https://github.com/plataformatec/devise/blob/master/app/controllers/devise/sessions_controller.rb#L7
+      # 登陆已经过身份验证的用户。注册后，此助手可用于记录用户。给sign_in的所有选项都传递给warden
+      # 的set_user方法。
+      # 如果你使用自定义warden策略和timeoutable模块，则必须在request中设置`env['devise.skip_timeout'] = true`以
+      # 使用此方法，就行我们在会话控制器中一样:
+      # https://github.com/plataformatec/devise/blob/master/app/controllers/devise/sessions_controller.rb#L7
       #
       # Examples:
       #
@@ -54,9 +51,8 @@ module Devise
         end
       end
 
-      # Sign in a user bypassing the warden callbacks and stores the user
-      # straight in session. This option is useful in cases the user is already
-      # signed in, but we want to refresh the credentials in session.
+      # 绕过warden回调登陆一个用户，并将该用户直接存储在会话中。此选项在warden已登录
+      # 的情况下很有用，但我们希望在会话中刷新凭据。
       #
       # Examples:
       #
@@ -65,12 +61,15 @@ module Devise
       def bypass_sign_in(resource, scope: nil)
         scope ||= Devise::Mapping.find_scope!(resource)
         expire_data_after_sign_in!
+
+        # puts "输出warden.session_serializer"
+        # p warden.session_serializer
+
         warden.session_serializer.store(resource, scope)
       end
 
-      # Sign out a given user or scope. This helper is useful for signing out a user
-      # after deleting accounts. Returns true if there was a logout and false if there
-      # is no user logged in on the referred scope
+      # 注销指定的用户或范围。此帮助程序对于在删除账户后注销用户非常有用。如果当前存在用户，并被
+      # 注销，返回true，否则返回false。
       #
       # Examples:
       #
@@ -78,7 +77,10 @@ module Devise
       #   sign_out @user     # sign_out(resource)
       #
       def sign_out(resource_or_scope=nil)
-        return sign_out_all_scopes unless resource_or_scope
+        if ! resource_or_scope
+          return sign_out_all_scopes
+        end
+
         scope = Devise::Mapping.find_scope!(resource_or_scope)
         user = warden.user(scope: scope, run_callbacks: false) # If there is no user
 
@@ -106,9 +108,8 @@ module Devise
       private
 
       def expire_data_after_sign_in!
-        # session.keys will return an empty array if the session is not yet loaded.
-        # This is a bug in both Rack and Rails.
-        # A call to #empty? forces the session to be loaded.
+        # 如果会话尚未加载，session.keys将返回空数组。
+        # 这在Rack和Rails中是一个bug。调用session.empty?强制加载会话
         session.empty?
         session.keys.grep(/^devise\./).each { |k| session.delete(k) }
       end

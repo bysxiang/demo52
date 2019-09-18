@@ -27,25 +27,23 @@ end
 
 module ActionDispatch::Routing
   class RouteSet #:nodoc:
-    # Ensure Devise modules are included only after loading routes, because we
-    # need devise_for mappings already declared to create filters and helpers.
+    # 确保只在加载路由后才include Devise模块，因为我们需要devise_for来创建过滤器和
+    # helpers。
     prepend Devise::RouteSet
   end
 
   class Mapper
-    # Includes devise_for method for routes. This method is responsible to
-    # generate all needed routes for devise, based on what modules you have
-    # defined in your model.
+    # 包含路由的devise_for方法。这种方法根据您在模型中定义的模块，生成devise所需的
+    # 所有路由。
     #
     # ==== Examples
     #
-    # Let's say you have an User model configured to use authenticatable,
-    # confirmable and recoverable modules. After creating this inside your routes:
+    # 假设你已将User模型配置为使用authenticatable，confirmable和recoverable模块。在你的
+    # 路由中创建此内容后:
     #
     #   devise_for :users
     #
-    # This method is going to look inside your User model and create the
-    # needed routes:
+    # 此方法将查看你的User模型并创建所需的路由:
     #
     #  # Session routes for Authenticatable (default)
     #       new_user_session GET    /users/sign_in                    {controller:"devise/sessions", action:"new"}
@@ -63,45 +61,40 @@ module ActionDispatch::Routing
     #      user_confirmation GET    /users/confirmation(.:format)     {controller:"devise/confirmations", action:"show"}
     #                        POST   /users/confirmation(.:format)     {controller:"devise/confirmations", action:"create"}
     #
-    # ==== Routes integration
+    # ==== 路由整合(Routes integration)
     #
-    # +devise_for+ is meant to play nicely with other routes methods. For example,
-    # by calling +devise_for+ inside a namespace, it automatically nests your devise
-    # controllers:
+    # devise_for意味着与其他路由方法可以很好的配合。例如，通过在命名空间内调用devise_for，
+    # 它自动嵌套你的devise控制器:
     #
     #     namespace :publisher do
     #       devise_for :account
     #     end
     #
-    # The snippet above will use publisher/sessions controller instead of devise/sessions
-    # controller. You can revert this change or configure it directly by passing the :module
-    # option described below to +devise_for+.
+    # 上面的代码将使用publisher/sessions控制器而不是devise/sessions控制器。你可以通过级那个下面
+    # 描述的:module选项传递给devise_for来直接还原更改或进行配置。
     #
-    # Also note that when you use a namespace it will affect all the helpers and methods
-    # for controllers and views. For example, using the above setup you'll end with
-    # following methods: current_publisher_account, authenticate_publisher_account!,
-    # publisher_account_signed_in, etc.
+    # 另请注意，使用命名空间时，它将影响控制器和视图的所有帮助程序和方法。例如，使用上面的设置，
+    # 你将要使用这些方法结束: current_publisher_account, authenticate_publisher_account!,
+    # publisher_account_signed_in等等。
     #
-    # The only aspect not affect by the router configuration is the model name. The
-    # model name can be explicitly set via the :class_name option.
+    # 路由配置唯一不影响的是模型名称。可通过:class_name选项设置模型名称。
     #
-    # ==== Options
+    # ==== 可选项(Options)
     #
-    # You can configure your routes with some options:
+    # 你可以使用以下选项配置路由:
     #
-    #  * class_name: set up a different class to be looked up by devise, if it cannot be
-    #    properly found by the route name.
+    #  * class_name: 如果它不能通过路由名称找到，可以设置一个不同的类以便通过devise查找。
     #
     #      devise_for :users, class_name: 'Account'
     #
-    #  * path: allows you to set up path name that will be used, as rails routes does.
-    #    The following route configuration would set up your route as /accounts instead of /users:
+    #  * path: 允许你设置将要使用的路径名，就行rails路由一样。以下路由将设置为/account而不是
+    #    /users
     #
     #      devise_for :users, path: 'accounts'
     #
-    #  * singular: set up the singular name for the given resource. This is used as the helper methods
-    #    names in controller ("authenticate_#{singular}!", "#{singular}_signed_in?", "current_#{singular}"
-    #    and "#{singular}_session"), as the scope name in routes and as the scope given to warden.
+    #  * singular: 设置给定资源的单数名称。这用做控制器中的辅助方法(authenticate_#{singular}, 
+    #    #{singular}_singned_in?, current_#{singular}和#{singular}_session)，作为路由中作用域名称和授予
+    #    warden作用域。
     #
     #      devise_for :admins, singular: :manager
     #
@@ -118,8 +111,8 @@ module ActionDispatch::Routing
     #        end
     #      end
     #
-    #  * path_names: configure different path names to overwrite defaults :sign_in, :sign_out, :sign_up,
-    #    :password, :confirmation, :unlock.
+    #  * path_names: 配置不同的路径名以覆盖默认值: :sign_in, sign_out, :sign_up, :password, :confirmation,
+    #    :unlock。
     #
     #      devise_for :users, path_names: {
     #        sign_in: 'login', sign_out: 'logout',
@@ -127,71 +120,68 @@ module ActionDispatch::Routing
     #        registration: 'register', edit: 'edit/profile'
     #      }
     #
-    #  * controllers: the controller which should be used. All routes by default points to Devise controllers.
-    #    However, if you want them to point to custom controller, you should do:
+    #  * controllers: 应使用的控制器。默认情况下，所有路由点使用Devise控制器。但是，如果希望它们指向自定义控制器，
+    #    则应执行以下操作:
     #
     #      devise_for :users, controllers: { sessions: "users/sessions" }
     #
-    #  * failure_app: a rack app which is invoked whenever there is a failure. Strings representing a given
-    #    are also allowed as parameter.
+    #  * failure_app: 一种rack应用，在出现故障时调用。表示给定的字符串也被允许作为参数。
     #
-    #  * sign_out_via: the HTTP method(s) accepted for the :sign_out action (default: :get),
-    #    if you wish to restrict this to accept only :post or :delete requests you should do:
+    #  * sign_out_via: :sign_out操作接受的HTTP方法(默认为:get)。如果你希望将此限制为仅接受:post或
+    #    :delete，你应该:
     #
     #      devise_for :users, sign_out_via: [:post, :delete]
     #
-    #    You need to make sure that your sign_out controls trigger a request with a matching HTTP method.
+    #    你需要确保sign_out控件使用匹配的HTTP方法触发请求。
     #
-    #  * module: the namespace to find controllers (default: "devise", thus
-    #    accessing devise/sessions, devise/registrations, and so on). If you want
-    #    to namespace all at once, use module:
+    #  * module: 用于查找控制器的命名空间。(默认为devise，因此访问devise/session, devise/registrations等)。
+    #    如果要同时命名所有命名空间,请使用模块:
     #
     #      devise_for :users, module: "users"
     #
-    #  * skip: tell which controller you want to skip routes from being created.
-    #    It accepts :all as an option, meaning it will not generate any route at all:
+    #  * skip: 告诉你想要跳过哪个控制器来创建路由。跳过的路由，如:sessions，不会创建此路由器。
+    #    它接受 :all作为选项，意味着它根本不会生成任何路由。
     #
     #      devise_for :users, skip: :sessions
     #
-    #  * only: the opposite of :skip, tell which controllers only to generate routes to:
+    #  * only: 与:skip相反，告诉控制器只生成的路由:
     #
     #      devise_for :users, only: :sessions
     #
-    #  * skip_helpers: skip generating Devise url helpers like new_session_path(@user).
-    #    This is useful to avoid conflicts with previous routes and is false by default.
-    #    It accepts true as option, meaning it will skip all the helpers for the controllers
-    #    given in :skip but it also accepts specific helpers to be skipped:
+    #  * skip_helpers: 跳过生成Devise url helpers，如new_session_path(@user)。这对于避免与先前路由
+    #    冲突很有用，默认情况下为false。它接受true作为选项，这意味着它将跳过控制器的所有helpers。通过
+    #    :skip跳出指定助手，:skip_helpers指定为true。
     #
     #      devise_for :users, skip: [:registrations, :confirmations], skip_helpers: true
     #      devise_for :users, skip_helpers: [:registrations, :confirmations]
     #
-    #  * format: include "(.:format)" in the generated routes? true by default, set to false to disable:
+    #  * format: 在生成的路由中包含(.:format)，默认为true，设置false以禁用:
     #
     #      devise_for :users, format: false
     #
-    #  * constraints: works the same as Rails' constraints
+    #  * constraints: 与Rails约束相同
     #
-    #  * defaults: works the same as Rails' defaults
+    #  * defaults: 与Rails约束相同
     #
-    #  * router_name: allows application level router name to be overwritten for the current scope
+    #  * router_name: 允许为当前范围覆盖应用程序级路由名称。
     #
     # ==== Scoping
     #
-    # Following Rails 3 routes DSL, you can nest devise_for calls inside a scope:
+    # 在Rails3路由DSL之后，你可以在范围内嵌套devise_for调用:
     #
     #   scope "/my" do
     #     devise_for :users
     #   end
     #
-    # However, since Devise uses the request path to retrieve the current user,
-    # this has one caveat: If you are using a dynamic segment, like so ...
+    # 但是，由于Devise使用请求路径来检索当前用户，这有一点需要注意：如果你正在使用动态
+    # segment，像这样...
     #
     #   scope ":locale" do
     #     devise_for :users
     #   end
     #
-    # you are required to configure default_url_options in your
-    # ApplicationController class, so Devise can pick it:
+    # 你需要在你的ApplicationController的配置中配置default_url_options，所以Devise可以
+    # 选择它:
     #
     #   class ApplicationController < ActionController::Base
     #     def self.default_url_options
@@ -199,12 +189,11 @@ module ActionDispatch::Routing
     #     end
     #   end
     #
-    # ==== Adding custom actions to override controllers
+    # ==== 添加自定义action以覆盖控制器(Adding custom actions to override controllers)
     #
-    # You can pass a block to devise_for that will add any routes defined in the block to Devise's
-    # list of known actions.  This is important if you add a custom action to a controller that
-    # overrides an out of the box Devise controller.
-    # For example:
+    # 你可以将一个块传递给devise_for，它将块中定义的任何路径添加到Devise已知的actions中。如过你向控制器添加
+    # 自定义操作，这一点很重要，覆盖开箱即用的Devise控制器。
+    # 例子:
     #
     #    class RegistrationsController < Devise::RegistrationsController
     #      def update
@@ -217,7 +206,7 @@ module ActionDispatch::Routing
     #      end
     #    end
     #
-    # In order to get Devise to recognize the deactivate action, your devise_scope entry should look like this:
+    # 为了让Devise识别停用action，你的devise_scope条目应如下所示:
     #
     #     devise_scope :owner do
     #       post "deactivate", to: "registrations#deactivate", as: "deactivate_registration"
@@ -225,7 +214,9 @@ module ActionDispatch::Routing
     #
     def devise_for(*resources)
       @devise_finalized = false
-      raise_no_secret_key unless Devise.secret_key
+      if ! Devise.secret_key
+        raise_no_secret_key
+      end
       options = resources.extract_options!
 
       options[:as]          ||= @scope[:as]     if @scope[:as].present?
@@ -239,30 +230,42 @@ module ActionDispatch::Routing
 
       resources.map!(&:to_sym)
 
+      puts "输出resources"
+      p resources
+
       resources.each do |resource|
         mapping = Devise.add_mapping(resource, options)
 
         begin
-          raise_no_devise_method_error!(mapping.class_name) unless mapping.to.respond_to?(:devise)
+          if ! mapping.to.respond_to?(:devise)
+            raise_no_devise_method_error!(mapping.class_name)
+          end
         rescue NameError => e
-          raise unless mapping.class_name == resource.to_s.classify
-          warn "[WARNING] You provided devise_for #{resource.inspect} but there is " \
-            "no model #{mapping.class_name} defined in your application"
-          next
+          if mapping.class_name != resource.to_s.classify
+            raise
+          else
+            warn "[WARNING] You provided devise_for #{resource.inspect} but there is " \
+              "no model #{mapping.class_name} defined in your application"
+            next
+          end
+          
         rescue NoMethodError => e
-          raise unless e.message.include?("undefined method `devise'")
-          raise_no_devise_method_error!(mapping.class_name)
+          if ! e.message.include?("undefined method `devise'")
+            raise
+          else
+            raise_no_devise_method_error!(mapping.class_name)
+          end
         end
 
         if options[:controllers] && options[:controllers][:omniauth_callbacks]
-          unless mapping.omniauthable?
+          if ! mapping.omniauthable?
             raise ArgumentError, "Mapping omniauth_callbacks on a resource that is not omniauthable\n" \
               "Please add `devise :omniauthable` to the `#{mapping.class_name}` model"
           end
         end
 
         routes = mapping.used_routes
-
+ 
         devise_scope mapping.name do
           with_devise_exclusive_scope mapping.fullpath, mapping.name, options do
             routes.each { |mod| send("devise_#{mod}", mapping, mapping.controllers) }
@@ -338,28 +341,25 @@ module ActionDispatch::Routing
       end
     end
 
-    # Sets the devise scope to be used in the controller. If you have custom routes,
-    # you are required to call this method (also aliased as :as) in order to specify
-    # to which controller it is targeted.
+    # 设置要在控制器中使用的devise范围。如果你有自定义路由，你需要调用此方法(也成为:as),以便
+    # 指定目标控制器。
     #
     #   as :user do
     #     get "sign_in", to: "devise/sessions#new"
     #   end
     #
-    # Notice you cannot have two scopes mapping to the same URL. And remember, if
-    # you try to access a devise controller without specifying a scope, it will
-    # raise ActionNotFound error.
+    # 注意，不能将两个作用域映射到同一个URL。记住，如果你视图在不指定范围的情况下访问devise
+    # 控制器，它将抛出ActionNotFound异常。
     #
-    # Also be aware of that 'devise_scope' and 'as' use the singular form of the
-    # noun where other devise route commands expect the plural form. This would be a
-    # good and working example.
+    # 也要注意，devise_for和as使用名词的单数形式，其他devise 路由命令使用复数形式。这将是
+    # 一个好的、有效的例子。
     #
     #  devise_scope :user do
     #    get "/some/route" => "some_devise_controller"
     #  end
     #  devise_for :users
     #
-    # Notice and be aware of the differences above between :user and :users
+    # 请注意并注意以下差异 :user和:users
     def devise_scope(scope)
       constraint = lambda do |request|
         request.env["devise.mapping"] = Devise.mappings[scope]

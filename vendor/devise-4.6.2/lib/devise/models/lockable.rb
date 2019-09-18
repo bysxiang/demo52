@@ -4,12 +4,10 @@ require "devise/hooks/lockable"
 
 module Devise
   module Models
-    # Handles blocking a user access after a certain number of attempts.
-    # Lockable accepts two different strategies to unlock a user after it's
-    # blocked: email and time. The former will send an email to the user when
-    # the lock happens, containing a link to unlock its account. The second
-    # will unlock the user automatically after some configured time (ie 2.hours).
-    # It's also possible to set up lockable to use both email and time strategies.
+    # 处理在一定次数的尝试后阻止用户访问。Lockable接受两种不同的策略来解锁用户锁定:
+    # 电子邮件和时间。前者将在何时向用户发送电子邮件锁定发生，包含一个链接解锁其账户。
+    # 第二个将在指定时间(例如2小时)之后，自动解锁其账户。还可以同时设置锁定策略，如
+    # 同时使用email和时间策略。
     #
     # == Options
     #

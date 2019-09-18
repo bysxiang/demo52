@@ -12,22 +12,24 @@ module Devise
       end
     end
 
-    # Creates configuration values for Devise and for the given module.
+    # 为Devise和给定模块创建配置值。
+    # 为给定的类添加实例方法
     #
     #   Devise::Models.config(Devise::Models::DatabaseAuthenticatable, :stretches)
     #
-    # The line above creates:
+    # 上面的行创建:
     #
-    #   1) An accessor called Devise.stretches, which value is used by default;
+    #   1) 一个被称为Devise.stretches的访问器。默认使用的值。
     #
-    #   2) Some class methods for your model Model.stretches and Model.stretches=
-    #      which have higher priority than Devise.stretches;
+    #   2) 你模型的一些类方法Model.stretches和Model.stretches=方法优先级高
+    #      Devise.stretches。
     #
-    #   3) And an instance method stretches.
+    #   3) 和一个实例方法stretches。
     #
-    # To add the class methods you need to have a module ClassMethods defined
-    # inside the given class.
+    # 要添加类方法，你需要在给定的类中定义一个模块类方法。
     #
+    # 为给定的模块，添加实例方法，如果存在实例方法或超类的实例方法，返回实例方法或继承的实例方法
+    # ，如果不存在，调用Devise模块的相关类方法。
     def self.config(mod, *accessors) #:nodoc:
       class << mod; attr_accessor :available_configs; end
       mod.available_configs = accessors
@@ -68,7 +70,7 @@ module Devise
       end
     end
 
-    # Include the chosen devise modules in your model:
+    # 在你的模型中包含devise模块:
     #
     #   devise :database_authenticatable, :confirmable, :recoverable
     #
@@ -83,6 +85,7 @@ module Devise
         Devise::ALL.index(s) || -1  # follow Devise::ALL order
       end
 
+      # 在模型类不执行
       devise_modules_hook! do
         include Devise::Models::Authenticatable
 
@@ -96,8 +99,11 @@ module Devise
             if class_mod.respond_to?(:available_configs)
               available_configs = class_mod.available_configs
               available_configs.each do |config|
-                next unless options.key?(config)
-                send(:"#{config}=", options.delete(config))
+                if ! options.key?(config)
+                  next
+                else
+                  send(:"#{config}=", options.delete(config))
+                end
               end
             end
           end

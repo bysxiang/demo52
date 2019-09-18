@@ -4,9 +4,8 @@ require 'devise/strategies/base'
 
 module Devise
   module Strategies
-    # This strategy should be used as basis for authentication strategies. It retrieves
-    # parameters both from params or from http authorization headers. See database_authenticatable
-    # for an example.
+    # 应该将此策略用作身份验证策略的基础。它从params或http授权头中检索参数。有关示例，请参阅
+    # database_authenticatable。
     class Authenticatable < Base
       attr_accessor :authentication_hash, :authentication_type, :password
 
@@ -14,6 +13,7 @@ module Devise
         super && !mapping.to.skip_session_storage.include?(authentication_type)
       end
 
+      # 正确设置了用户、密码等用于验证的信息，即返回true。
       def valid?
         valid_for_params_auth? || valid_for_http_auth?
       end
@@ -27,13 +27,10 @@ module Devise
 
     private
 
-      # Receives a resource and check if it is valid by calling valid_for_authentication?
-      # A block that will be triggered while validating can be optionally
-      # given as parameter. Check Devise::Models::Authenticatable.valid_for_authentication?
-      # for more information.
+      # 接收一个资源并通过调用valid_for_authentication?检查是否有效，验证时将触发的块是可选的，它
+      # 作为参数给出。检查Devise::Models::Authenticatable.valid_for_authentication?获取更多信息
       #
-      # In case the resource can't be validated, it will fail with the given
-      # unauthenticated_message.
+      # 如果无法验证资源，它将失败，并显示给定的未经身份验证的消息。
       def validate(resource, &block)
         result = resource && resource.valid_for_authentication?(&block)
 
@@ -67,7 +64,7 @@ module Devise
         http_authenticatable? && request.authorization && with_authentication_hash(:http_auth, http_auth_hash)
       end
 
-      # Check if this is a valid strategy for params authentication by:
+      # 检查这是不是一个有效的params 授权策略: 
       #
       #   * Validating if the model allows params authentication;
       #   * If the request hits the sessions controller through POST;
@@ -75,8 +72,16 @@ module Devise
       #   * If all authentication keys are present;
       #
       def valid_for_params_auth?
-        params_authenticatable? && valid_params_request? &&
+        puts "输出params_auth_hash， authtable"
+        p params_auth_hash
+
+        result = params_authenticatable? && valid_params_request? &&
           valid_params? && with_authentication_hash(:params_auth, params_auth_hash)
+
+        puts "输出self.authentication_hash"
+        p self.authentication_hash
+
+        return result
       end
 
       # Check if the model accepts this strategy as http authenticatable.
@@ -84,7 +89,7 @@ module Devise
         mapping.to.http_authenticatable?(authenticatable_name)
       end
 
-      # Check if the model accepts this strategy as params authenticatable.
+      # 检查模型是否接受此策略为params authenticatable。
       def params_authenticatable?
         mapping.to.params_authenticatable?(authenticatable_name)
       end
@@ -100,12 +105,12 @@ module Devise
         Hash[*keys.zip(decode_credentials).flatten]
       end
 
-      # By default, a request is valid if the controller set the proper env variable.
+      # 默认情况下，如果控制器设置了适当的env变量，则请求是有效的。
       def valid_params_request?
         !!env["devise.allow_params_authentication"]
       end
 
-      # If the request is valid, finally check if params_auth_hash returns a hash.
+      # 如果请求有效，最后检查params_auth_hash是否返回一个hash。
       def valid_params?
         params_auth_hash.is_a?(Hash)
       end
@@ -124,10 +129,14 @@ module Devise
         Base64.decode64($1).split(/:/, 2)
       end
 
-      # Sets the authentication hash and the password from params_auth_hash or http_auth_hash.
+      # 从params_auth_hash或http_auth_hash设置身份验证hash和密码。
+      # auth_values 包含email, password等信息
+      # self.authentication_hash存储authentication_keys对应的值
       def with_authentication_hash(auth_type, auth_values)
         self.authentication_hash, self.authentication_type = {}, auth_type
         self.password = auth_values[:password]
+
+        puts "输出auth_type: #{auth_type}, auth_values: #{auth_values}"
 
         parse_authentication_key_values(auth_values, authentication_keys) &&
         parse_authentication_key_values(request_values, request_keys)
@@ -138,6 +147,8 @@ module Devise
       end
 
       def http_authentication_key
+        # result = 
+
         @http_authentication_key ||= mapping.to.http_authentication_key || case authentication_keys
           when Array then authentication_keys.first
           when Hash then authentication_keys.keys.first
@@ -154,20 +165,24 @@ module Devise
         Hash[keys.zip(values)]
       end
 
+      # 从hash(即登陆等操作中传递的email, password等信息)
+      # 中提取authentication_keys中的值
       def parse_authentication_key_values(hash, keys)
         keys.each do |key, enforce|
           value = hash[key].presence
           if value
             self.authentication_hash[key] = value
           else
-            return false unless enforce == false
+            if enforce != false
+              return false
+            end
           end
         end
         true
       end
 
-      # Holds the authenticatable name for this class. Devise::Strategies::DatabaseAuthenticatable
-      # becomes simply :database.
+      # 持有此类的authenticatable名称。使得Devise::Strategies::DatabaseAuthenticatable变的简单，
+      # 变为 :database
       def authenticatable_name
         @authenticatable_name ||=
           ActiveSupport::Inflector.underscore(self.class.name.split("::").last).

@@ -20,6 +20,10 @@ module Devise
 
     def self.call(env)
       @respond ||= action(:respond)
+
+      puts "输出fail_app中respond"
+      p @respond
+
       @respond.call(env)
     end
 
@@ -36,10 +40,13 @@ module Devise
 
     def respond
       if http_auth?
+        puts "http_auth"
         http_auth
       elsif warden_options[:recall]
+        puts "recall"
         recall
       else
+        puts "redirect"
         redirect
       end
     end
@@ -171,14 +178,16 @@ module Devise
       %w(html */*).include? request_format.to_s
     end
 
-    # Choose whether we should respond in an HTTP authentication fashion,
-    # including 401 and optional headers.
+    # 选择是否应以http身份验证方式响应，包括401和可选的headers。
     #
     # This method allows the user to explicitly disable HTTP authentication
     # on AJAX requests in case they want to redirect on failures instead of
     # handling the errors on their own. This is useful in case your AJAX API
     # is the same as your public API and uses a format like JSON (so you
     # cannot mark JSON as a navigational format).
+    # 关于AJAX请求，此方法允许用户显式禁用HTTP身份验证，以防止他们想要重定向失败而
+    # 不是自己处理错误。如果你的AJAX API与公共API相同并使用JSON之类的格式(因此
+    # 你无法将JSON标记为导航格式)，这将非常有用。
     def http_auth?
       if request.xhr?
         Devise.http_authenticatable_on_xhr

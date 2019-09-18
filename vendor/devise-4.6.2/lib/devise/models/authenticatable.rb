@@ -6,48 +6,45 @@ require 'devise/hooks/csrf_cleaner'
 
 module Devise
   module Models
-    # Authenticatable module. Holds common settings for authentication.
+    # Authenticatable模块。保存用于身份验证的公共设置。
     #
     # == Options
     #
-    # Authenticatable adds the following options to devise_for:
+    # Authenticatable 添加以下这些选项:
     #
-    #   * +authentication_keys+: parameters used for authentication. By default [:email].
+    #   * +authentication_keys+: 用于身份验证的参数. 默认是 [:email].
     #
-    #   * +http_authentication_key+: map the username passed via HTTP Auth to this parameter. Defaults to
-    #     the first element in +authentication_keys+.
+    #   * +http_authentication_key+: 将通过HTTP AUTH传递的用户名映射到此参数。默认为+authentication_keys+
+    #     的第一个参数
     #
-    #   * +request_keys+: parameters from the request object used for authentication.
-    #     By specifying a symbol (which should be a request method), it will automatically be
-    #     passed to find_for_authentication method and considered in your model lookup.
+    #   * +request_keys+: 来自用于身份验证的请求对象的参数。通过指定符号(应该是请求方法)，它自动传递给
+    #     find_for_authentication方法并查找模型。
     #
-    #     For instance, if you set :request_keys to [:subdomain], :subdomain will be considered
-    #     as key on authentication. This can also be a hash where the value is a boolean specifying
-    #     if the value is required or not.
+    #     例如，如果您将:request_keys设置为[:subdomain]，:subdomain将被考虑作为认证的主键。也可以是一个hash
+    #     , 其中值是布尔值指定的是否需要该值。
     #
-    #   * +http_authenticatable+: if this model allows http authentication. By default false.
-    #     It also accepts an array specifying the strategies that should allow http.
+    #   * +http_authenticatable+: 如果此模型允许http身份验证。默认为false。它也可以接受一个数组，该数组指定
+    #     允许http的策略。
     #
-    #   * +params_authenticatable+: if this model allows authentication through request params. By default true.
-    #     It also accepts an array specifying the strategies that should allow params authentication.
+    #   * +params_authenticatable+: 如果此模型允许通过请求参数进行身份验证。默认为true。它也可以接受一个数组，
+    #     指定应允许的params身份验证策略。
     #
-    #   * +skip_session_storage+: By default Devise will store the user in session.
-    #     By default is set to skip_session_storage: [:http_auth].
+    #   * +skip_session_storage+: 默认情况下，Devise会将用户存储在会话中。默认情况下设置
+    #     skip_session_storage: [:http_auth].
     #
     # == active_for_authentication?
     #
-    # After authenticating a user and in each request, Devise checks if your model is active by
-    # calling model.active_for_authentication?. This method is overwritten by other devise modules. For instance,
-    # :confirmable overwrites .active_for_authentication? to only return true if your model was confirmed.
+    # 在对用户进行身份验证之后，在每个请求中，Devise通过model.active_for_authentication?检查您的模型是否处于活动状态。
+    # 其他devise模块会覆盖此方法。例如，:confirmable重写.active_for_authentication?,当您的模型已确认无误，它返回true。
     #
-    # You can overwrite this method yourself, but if you do, don't forget to call super:
+    # 您也可以重写此方法，但是不要忘记调用super:
     #
     #   def active_for_authentication?
     #     super && special_condition_is_valid?
     #   end
     #
-    # Whenever active_for_authentication? returns false, Devise asks the reason why your model is inactive using
-    # the inactive_message method. You can overwrite it as well:
+    # 每当active_for_authentication?返回false，Devise使用inactive_message方法询问模型处于非活动状态的原因。你也可以
+    # 覆盖它
     #
     #   def inactive_message
     #     special_condition_is_valid? ? super : :special_condition_is_not_valid
@@ -73,12 +70,10 @@ module Devise
         []
       end
 
-      # Check if the current object is valid for authentication. This method and
-      # find_for_authentication are the methods used in a Warden::Strategy to check
-      # if a model should be signed in or not.
+      # 检查当前对象是否对身份验证有效。这种方法和find_for_authentication用于Warden::Strategy
+      # 检查模型是否应该登录。
       #
-      # However, you should not overwrite this method, you should overwrite active_for_authentication?
-      # and inactive_message instead.
+      # 但是，不应覆盖此方法，而应重写active_for_authentication?和inactive_message方法。
       def valid_for_authentication?
         block_given? ? yield : true
       end
@@ -231,6 +226,9 @@ module Devise
           :http_authentication_key)
 
         def serialize_into_session(record)
+          puts "输出record"
+          p record
+
           [record.to_key, record.authenticatable_salt]
         end
 

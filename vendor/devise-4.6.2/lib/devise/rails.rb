@@ -17,6 +17,7 @@ module Devise
       app.reload_routes! if Devise.reload_routes
     end
 
+    # 为ApplicationController加载Devise::Controllers::Helpers
     initializer "devise.url_helpers" do
       Devise.include_helpers(Devise::Controllers)
     end

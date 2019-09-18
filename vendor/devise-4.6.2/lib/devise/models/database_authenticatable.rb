@@ -228,6 +228,8 @@ module Devise
         # DatabaseAuthenticatable strategy. If you are using this method on
         # your own, be sure to sanitize the conditions hash to only include
         # the proper fields.
+        # 我们假设这个方法已经从DatabaseAuthenticatable策略获取到了sanitized值。如果
+        # 你正在你自己的类内使用这个方法，一定要sanitizehash，只包含适当的字段
         def find_for_database_authentication(conditions)
           find_for_authentication(conditions)
         end

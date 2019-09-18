@@ -1,27 +1,25 @@
 # frozen_string_literal: true
 
 module Devise
-  # Responsible for handling devise mappings and routes configuration. Each
-  # resource configured by devise_for in routes is actually creating a mapping
-  # object. You can refer to devise_for in routes for usage options.
+  # 负责处理devise映射与路由配置。路由中devise_for配置的每个资源实际上都是在创建映射
+  # 对象。你可以在路由中参考devise_for以获取使用选项。
   #
-  # The required value in devise_for is actually not used internally, but it's
-  # inflected to find all other values.
+  # devise_for所需的值实际上并未在内部使用，但它屈服于寻找其他值。
   #
   #   map.devise_for :users
   #   mapping = Devise.mappings[:user]
   #
   #   mapping.name #=> :user
-  #   # is the scope used in controllers and warden, given in the route as :singular.
+  #   # 是控制器和warden使用的范围，在路由中给出，使用参数 :singular。
   #
   #   mapping.as   #=> "users"
-  #   # how the mapping should be search in the path, given in the route as :as.
+  #   # 如何在路径中搜索映射，在路径中给出，使用参数 :as。
   #
   #   mapping.to   #=> User
-  #   # is the class to be loaded from routes, given in the route as :class_name.
+  #   # 路由要加载的类，在路由中通过参数 :class_name。
   #
   #   mapping.modules  #=> [:authenticatable]
-  #   # is the modules included in the class
+  #   # 是类中包含的模块
   #
   class Mapping #:nodoc:
     attr_reader :singular, :scoped_path, :path, :controllers, :path_names,
@@ -103,7 +101,7 @@ module Devise
       "/#{@path_prefix}/#{@path}".squeeze("/")
     end
 
-    # Create magic predicates for verifying what module is activated by this map.
+    # 创建魔术方法，验证激活了哪个模块。
     # Example:
     #
     #   def confirmable?

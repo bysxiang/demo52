@@ -2,21 +2,27 @@
 
 module Devise
   module Strategies
-    # Base strategy for Devise. Responsible for verifying correct scope and mapping.
+    # Devise基本策略类。负责验证正确的scope和mapping。
     class Base < ::Warden::Strategies::Base
-      # Whenever CSRF cannot be verified, we turn off any kind of storage
+      # 如果无法验证CSRF，我们将关闭任何类型的存储。
       def store?
         !env["devise.skip_storage"]
       end
 
-      # Checks if a valid scope was given for devise and find mapping based on this scope.
+      # 检查是否为devise提供了有效的scope，并根据该scope查找mapping。
       def mapping
         @mapping ||= begin
           mapping = Devise.mappings[scope]
-          raise "Could not find mapping for #{scope}" unless mapping
-          mapping
+          if ! mapping
+            raise "Could not find mapping for #{scope}"
+          else
+            mapping
+          end
+          
         end
       end
+
     end
+
   end
 end

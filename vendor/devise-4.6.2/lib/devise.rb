@@ -47,253 +47,243 @@ module Devise
     autoload :IntegrationHelpers, 'devise/test/integration_helpers'
   end
 
-  # Constants which holds devise configuration for extensions. Those should
-  # not be modified by the "end user" (this is why they are constants).
+  # 包含devise扩展配置的常量。不应该被用户修改(这就是为什么它们是常量)。
   ALL         = []
   CONTROLLERS = {}
   ROUTES      = {}
   STRATEGIES  = {}
   URL_HELPERS = {}
 
-  # Strategies that do not require user input.
+  # 不需要用户输入的策略。
   NO_INPUT = []
 
-  # True values used to check params
+  # 用于检测参数的为真的值
   TRUE_VALUES = [true, 1, '1', 't', 'T', 'true', 'TRUE']
 
-  # Secret key used by the key generator
+  # 密钥生成器使用的密钥
   mattr_accessor :secret_key
   @@secret_key = nil
 
-  # Custom domain or key for cookies. Not set by default
+  # cookie的自定义域或密钥。默认情况下未设置
   mattr_accessor :rememberable_options
   @@rememberable_options = {}
 
-  # The number of times to hash the password.
+  # hash密码的次数。
   mattr_accessor :stretches
   @@stretches = 11
 
-  # The default key used when authenticating over http auth.
+  # 通过http身份验证进行身份认证时使用的默认密钥。
   mattr_accessor :http_authentication_key
   @@http_authentication_key = nil
 
-  # Keys used when authenticating a user.
+  # 验证用户时使用的密钥
   mattr_accessor :authentication_keys
   @@authentication_keys = [:email]
 
-  # Request keys used when authenticating a user.
+  # 验证用户身份时使用的请求密钥。
   mattr_accessor :request_keys
   @@request_keys = []
 
-  # Keys that should be case-insensitive.
+  # 应该不区分大小写的键。
   mattr_accessor :case_insensitive_keys
   @@case_insensitive_keys = [:email]
 
-  # Keys that should have whitespace stripped.
+  # 应该删除空格的键
   mattr_accessor :strip_whitespace_keys
   @@strip_whitespace_keys = [:email]
 
-  # If http authentication is enabled by default.
+  # 如果默认启用http身份验证。
   mattr_accessor :http_authenticatable
   @@http_authenticatable = false
 
-  # If http headers should be returned for ajax requests. True by default.
+  # 如果应该为ajax请求返回http头。默认为true.
   mattr_accessor :http_authenticatable_on_xhr
   @@http_authenticatable_on_xhr = true
 
-  # If params authenticatable is enabled by default.
+  # 如果默认情况下启用了params身份验证。
   mattr_accessor :params_authenticatable
   @@params_authenticatable = true
 
-  # The realm used in Http Basic Authentication.
+  # http基本身份验证中使用的领域。
   mattr_accessor :http_authentication_realm
   @@http_authentication_realm = "Application"
 
-  # Email regex used to validate email formats. It asserts that there are no
-  # @ symbols or whitespaces in either the localpart or the domain, and that
-  # there is a single @ symbol separating the localpart and the domain.
+  # 用于验证电子邮件的正则表达式。它断言没有@符号或域中的空白，等等。有一个@符号分割
+  # localpart和域。
   mattr_accessor :email_regexp
   @@email_regexp = /\A[^@\s]+@[^@\s]+\z/
 
-  # Range validation for password length
+  # 范围验证密码的长度。
   mattr_accessor :password_length
   @@password_length = 6..128
 
-  # The time the user will be remembered without asking for credentials again.
+  # 无需再次请求凭证即可记住用户的时间。
   mattr_accessor :remember_for
   @@remember_for = 2.weeks
 
-  # If true, extends the user's remember period when remembered via cookie.
+  # 如果为true，则在通过cookie记住时延长用户的记忆期。
   mattr_accessor :extend_remember_period
   @@extend_remember_period = false
 
-  # If true, all the remember me tokens are going to be invalidated when the user signs out.
+  # 如果为true，那么当用户退出时，所有记住我的令牌都将失效。
   mattr_accessor :expire_all_remember_me_on_sign_out
   @@expire_all_remember_me_on_sign_out = true
 
-  # Time interval you can access your account before confirming your account.
-  # nil - allows unconfirmed access for unlimited time
+  # 在确认账户之前，您可以访问账户的时间间隔。nil - 允许无限制访问无限时间
   mattr_accessor :allow_unconfirmed_access_for
   @@allow_unconfirmed_access_for = 0.days
 
-  # Time interval the confirmation token is valid. nil = unlimited
+  # 确认令牌的有效的时间间隔。nil = 无限制。
   mattr_accessor :confirm_within
   @@confirm_within = nil
 
-  # Defines which key will be used when confirming an account.
+  # 定义确认账户时将使用的密钥。
   mattr_accessor :confirmation_keys
   @@confirmation_keys = [:email]
 
-  # Defines if email should be reconfirmable.
+  # 定义电子邮件是否应该可重新启动。
   mattr_accessor :reconfirmable
   @@reconfirmable = true
 
-  # Time interval to timeout the user session without activity.
+  # 没有活动的用户会话超时的时间间隔。
   mattr_accessor :timeout_in
   @@timeout_in = 30.minutes
 
-  # Used to hash the password. Please generate one with rails secret.
+  # 用于hash密码。请使用rails secret生成。
   mattr_accessor :pepper
   @@pepper = nil
 
-  # Used to send notification to the original user email when their email is changed.
+  # 用于在更改电子邮件时向原始用户电子邮件发送通知。
   mattr_accessor :send_email_changed_notification
   @@send_email_changed_notification = false
 
-  # Used to enable sending notification to user when their password is changed.
+  # 用于在密码更改时向用户发送通知。
   mattr_accessor :send_password_change_notification
   @@send_password_change_notification = false
 
-  # Scoped views. Since it relies on fallbacks to render default views, it's
-  # turned off by default.
+  # 范围视图。因为它依赖于回退来呈现默认视图，所以它是默认关闭。
   mattr_accessor :scoped_views
   @@scoped_views = false
 
-  # Defines which strategy can be used to lock an account.
-  # Values: :failed_attempts, :none
+  # 定义可用于锁定账户的策略。
+  # 值：:failed_attempts, :none。
   mattr_accessor :lock_strategy
   @@lock_strategy = :failed_attempts
 
-  # Defines which key will be used when locking and unlocking an account
+  # 定义锁定和解锁账户时使用的key
   mattr_accessor :unlock_keys
   @@unlock_keys = [:email]
 
-  # Defines which strategy can be used to unlock an account.
-  # Values: :email, :time, :both
+  # 定义可用于解锁账户的策略。
+  # 值: :email, :time, :both
   mattr_accessor :unlock_strategy
   @@unlock_strategy = :both
 
-  # Number of authentication tries before locking an account
+  # 锁定账户之前的身份验证尝试次数
   mattr_accessor :maximum_attempts
   @@maximum_attempts = 20
 
-  # Time interval to unlock the account if :time is defined as unlock_strategy.
+  # 如果:time被定义为unlock_strategy，则解锁帐户的时间间隔
   mattr_accessor :unlock_in
   @@unlock_in = 1.hour
 
-  # Defines which key will be used when recovering the password for an account
+  # 定义在恢复密码时将使用的key。
   mattr_accessor :reset_password_keys
   @@reset_password_keys = [:email]
 
-  # Time interval you can reset your password with a reset password key
+  # 您可以使用重置密码key重置密码的时间间隔。
   mattr_accessor :reset_password_within
   @@reset_password_within = 6.hours
 
-  # When set to false, resetting a password does not automatically sign in a user
+  # 设置为false时，重置密码不会自动登陆用户。
   mattr_accessor :sign_in_after_reset_password
   @@sign_in_after_reset_password = true
 
-  # The default scope which is used by warden.
+  # warden使用的default scope
   mattr_accessor :default_scope
   @@default_scope = nil
 
-  # Address which sends Devise e-mails.
+  # 发送Devise邮件的地址。
   mattr_accessor :mailer_sender
   @@mailer_sender = nil
 
-  # Skip session storage for the following strategies
+  # 跳过会话存储以执行以下策略
   mattr_accessor :skip_session_storage
   @@skip_session_storage = [:http_auth]
 
-  # Which formats should be treated as navigational.
+  # 应将哪些格式视为导航。
   mattr_accessor :navigational_formats
   @@navigational_formats = ["*/*", :html]
 
-  # When set to true, signing out a user signs out all other scopes.
+  # 设置为true时，注销用户会注销所有其他范围。
   mattr_accessor :sign_out_all_scopes
   @@sign_out_all_scopes = true
 
-  # The default method used while signing out
+  # 注销时使用的默认方法。
   mattr_accessor :sign_out_via
   @@sign_out_via = :delete
 
-  # The parent controller all Devise controllers inherits from.
-  # Defaults to ApplicationController. This should be set early
-  # in the initialization process and should be set to a string.
+  # 所有Devise控制器的默认父类。默认为ApplicationController，这应该
+  # 尽早设置。
   mattr_accessor :parent_controller
   @@parent_controller = "ApplicationController"
 
-  # The parent mailer all Devise mailers inherit from.
-  # Defaults to ActionMailer::Base. This should be set early
-  # in the initialization process and should be set to a string.
+  # 所有Devise邮件的默认父类。默认为ActionMailer::Base。这应该尽早
+  # 设置。
   mattr_accessor :parent_mailer
   @@parent_mailer = "ActionMailer::Base"
 
-  # The router Devise should use to generate routes. Defaults
-  # to :main_app. Should be overridden by engines in order
-  # to provide custom routes.
+  # Devise路由应该用来生成路由。默认 :main_app。应按顺序被引擎覆盖
+  # 提供自定义路由。
   mattr_accessor :router_name
   @@router_name = nil
 
-  # Set the OmniAuth path prefix so it can be overridden when
-  # Devise is used in a mountable engine
+  # 设置omniauth路径前缀，以便在Devise中使用可装的引擎。
   mattr_accessor :omniauth_path_prefix
   @@omniauth_path_prefix = nil
 
-  # Set if we should clean up the CSRF Token on authentication
+  # 设置验证时是否应清除CSRF令牌。
   mattr_accessor :clean_up_csrf_token_on_authentication
   @@clean_up_csrf_token_on_authentication = true
 
-  # When false, Devise will not attempt to reload routes on eager load.
-  # This can reduce the time taken to boot the app but if your application
-  # requires the Devise mappings to be loaded during boot time the application
-  # won't boot properly.
+  # 如果为false，Devise将不会尝试在急切加载时重新加载路由。这可以减少启动程序所需的时间，
+  # 但是如果您的应用程序需要在应用程序启动时加载Devise映射，将无法启动。
   mattr_accessor :reload_routes
   @@reload_routes = true
 
-  # PRIVATE CONFIGURATION
+  # 私有配置
 
-  # Store scopes mappings.
+  # 存储范围映射
   mattr_reader :mappings
   @@mappings = {}
 
-  # OmniAuth configurations.
+  # OmniAuth配置信息
   mattr_reader :omniauth_configs
   @@omniauth_configs = {}
 
-  # Define a set of modules that are called when a mapping is added.
+  # 定义添加映射时调用的一组模块。
   mattr_reader :helpers
   @@helpers = Set.new
   @@helpers << Devise::Controllers::Helpers
 
-  # Private methods to interface with Warden.
+  # 与warden交互的私有方法
   mattr_accessor :warden_config
   @@warden_config = nil
   @@warden_config_blocks = []
 
-  # When true, enter in paranoid mode to avoid user enumeration.
+  # 如果为true，请输入偏执模式以避免用户枚举。
   mattr_accessor :paranoid
   @@paranoid = false
 
-  # When true, warn user if they just used next-to-last attempt of authentication
+  # 如果为true，则警告用户它们是否只使用了倒数第二次的身份验证尝试。
   mattr_accessor :last_attempt_warning
   @@last_attempt_warning = true
 
-  # Stores the token generator
+  # 存储令牌生成器
   mattr_accessor :token_generator
   @@token_generator = nil
 
-  # When set to false, changing a password does not automatically sign in a user
+  # 设置为false时，更改密码不会自动登陆用户。
   mattr_accessor :sign_in_after_change_password
   @@sign_in_after_change_password = true
 
@@ -345,7 +335,7 @@ module Devise
   end
   self.mailer = "Devise::Mailer"
 
-  # Small method that adds a mapping to Devise.
+  # 向Devise添加映射的小方法。
   def self.add_mapping(resource, options)
     mapping = Devise::Mapping.new(resource, options)
     @@mappings[mapping.name] = mapping
@@ -354,12 +344,10 @@ module Devise
     mapping
   end
 
-  # Register available devise modules. For the standard modules that Devise provides, this method is
-  # called from lib/devise/modules.rb. Third-party modules need to be added explicitly using this method.
+  # 注册可用的devise模块。对于devise提供的标准模块，这个方法从lib/devise/modules.rb中调用。需要使用此方法显式
+  # 添加第三方模块。 
   #
-  # Note that adding a module using this method does not cause it to be used in the authentication
-  # process. That requires that the module be listed in the arguments passed to the 'devise' method
-  # in the model class definition.
+  # 注意，使用此方法添加模块不会导致在身份验证的过程中使用它。需要在模型类定义中使用devise方法来使用模块。
   #
   # == Options:
   #
@@ -394,15 +382,17 @@ module Devise
       CONTROLLERS[module_name] = controller
     end
 
-    NO_INPUT << strategy if options[:no_input]
+    if options[:no_input]
+      NO_INPUT << strategy
+    end
 
-    if route = options[:route]
-      case route
-      when TrueClass
+    route = options[:route]
+    if route
+      if route.is_a?(TrueClass)
         key, value = module_name, []
-      when Symbol
+      elsif route.is_a?(Symbol)
         key, value = route, []
-      when Hash
+      elsif route.is_a?(Hash)
         key, value = route.keys.first, route.values.flatten
       else
         raise ArgumentError, ":route should be true, a Symbol or a Hash"
@@ -413,7 +403,7 @@ module Devise
       URL_HELPERS[key].uniq!
 
       ROUTES[module_name] = key
-    end
+    end # if route .. end
 
     if options[:model]
       path = (options[:model] == true ? "devise/models/#{module_name}" : options[:model])
@@ -448,10 +438,12 @@ module Devise
     @@omniauth_configs[config.strategy_name.to_sym] = config
   end
 
-  # Include helpers in the given scope to AC and AV.
+  # 为ActiveController和ActiveView include helpers
   def self.include_helpers(scope)
     ActiveSupport.on_load(:action_controller) do
-      include scope::Helpers if defined?(scope::Helpers)
+      if defined?(scope::Helpers)
+        include scope::Helpers
+      end
       include scope::UrlHelpers
     end
 

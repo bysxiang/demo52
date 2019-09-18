@@ -4,9 +4,9 @@ require "uri"
 
 module Devise
   module Controllers
-    # Provide the ability to store a location.
-    # Used to redirect back to a desired path after sign in.
-    # Included by default in all controllers.
+    # 提供存储位置功能。
+    # 用于在登录后重定向回所需的路径。
+    # 默认情况下包含在所有控制器中。
     module StoreLocation
       # Returns and delete (if it's navigational format) the url stored in the session for
       # the given scope. Useful for giving redirect backs after sign up:

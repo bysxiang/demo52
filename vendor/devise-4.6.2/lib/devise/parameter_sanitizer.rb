@@ -1,33 +1,30 @@
 # frozen_string_literal: true
 
 module Devise
-  # The +ParameterSanitizer+ deals with permitting specific parameters values
-  # for each +Devise+ scope in the application.
+  # ParameterSantizer处理应用程序中每个Devise范围的特定参数值。
   #
-  # The sanitizer knows about Devise default parameters (like +password+ and
-  # +password_confirmation+ for the `RegistrationsController`), and you can
-  # extend or change the permitted parameters list on your controllers.
+  # santizer知道devise默认参数(例如RegistrationsController的password和password_confirm)
+  # ，并且可以扩展或更改控制器上的允许参数列表。
   #
-  # === Permitting new parameters
+  # === 允许新的参数(Permitting new parameters)
   #
-  # You can add new parameters to the permitted list using the +permit+ method
-  # in a +before_action+ method, for instance.
+  # 你可以使用before_action方法中的permit方法向允许列表添加新参数。
+  # 
   #
   #    class ApplicationController < ActionController::Base
   #      before_action :configure_permitted_parameters, if: :devise_controller?
-  #
+   #
   #      protected
   #
   #      def configure_permitted_parameters
-  #        # Permit the `subscribe_newsletter` parameter along with the other
-  #        # sign up parameters.
+  #        # 允许subscribe_newsletter参数和其他参数一起作为注册参数
   #        devise_parameter_sanitizer.permit(:sign_up, keys: [:subscribe_newsletter])
   #      end
   #    end
   #
-  # Using a block yields an +ActionController::Parameters+ object so you can
-  # permit nested parameters and have more control over how the parameters are
-  # permitted in your controller.
+  # 使用块会生成ActionController::Parameters对象，因此可以你能嵌套参数，并可以更好
+  # 的控制控制器中参数的允许方式
+  # 
   #
   #    def configure_permitted_parameters
   #      devise_parameter_sanitizer.permit(:sign_up) do |user|
@@ -79,28 +76,26 @@ module Devise
       end
     end
 
-    # Add or remove new parameters to the permitted list of an +action+.
+    # 在action允许列表中添加或删除新参数。
     #
     # === Arguments
     #
-    # * +action+ - A +Symbol+ with the action that the controller is
-    #   performing, like +sign_up+, +sign_in+, etc.
-    # * +keys:+     - An +Array+ of keys that also should be permitted.
-    # * +except:+   - An +Array+ of keys that shouldn't be permitted.
-    # * +block+     - A block that should be used to permit the action
-    #   parameters instead of the +Array+ based approach. The block will be
-    #   called with an +ActionController::Parameters+ instance.
+    # * +action+ - 一个要Perfom的控制器action，它是一个符号，如sign_up, 
+    #   sign_in等。
+    # * +keys:+     - 一个数组，表示要permitted的keys
+    # * +except:+   - 一个数据，表示要被排除的keys
+    # * +block+     - 应用于允许操作的块的参数而不是基于Array的方法。块将使用
+    #   ActionController::Parameters实例调用。
     #
     # === Examples
     #
-    #   # Adding new parameters to be permitted in the `sign_up` action.
+    #   # 在sign_up action中允许新的参数
     #   devise_parameter_sanitizer.permit(:sign_up, keys: [:subscribe_newsletter])
     #
-    #   # Removing the `password` parameter from the `account_update` action.
+    #   # 在account_update action中异常password参数
     #   devise_parameter_sanitizer.permit(:account_update, except: [:password])
     #
-    #   # Using the block form to completely override how we permit the
-    #   # parameters for the `sign_up` action.
+    #   # 使用块形式完全覆盖我们permit的用于sign_up的参数
     #   devise_parameter_sanitizer.permit(:sign_up) do |user|
     #     user.permit(:email, :password, :password_confirmation)
     #   end
