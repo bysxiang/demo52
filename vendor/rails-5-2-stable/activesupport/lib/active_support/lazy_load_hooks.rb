@@ -1,14 +1,12 @@
 # frozen_string_literal: true
 
 module ActiveSupport
-  # lazy_load_hooks allows Rails to lazily load a lot of components and thus
-  # making the app boot faster. Because of this feature now there is no need to
-  # require <tt>ActiveRecord::Base</tt> at boot time purely to apply
-  # configuration. Instead a hook is registered that applies configuration once
-  # <tt>ActiveRecord::Base</tt> is loaded. Here <tt>ActiveRecord::Base</tt> is
-  # used as example but this feature can be applied elsewhere too.
+  # lazy_load_hooks使Rails懒惰加地加载很多组件，从而使应用程序启动更快。由于此功能，
+  # 现在没有必要在启动时require ActiveRecord::Base。而是注册了一个应用配置一次的钩子，
+  # ActiveRecord::Base已加载。这里ActiveRecord::Base是用作示例，此功能也可以应用在
+  # 其他地方。
   #
-  # Here is an example where +on_load+ method is called to register a hook.
+  # 这是一个示例，其中调用on_load方法来注册一个钩子。
   #
   #   initializer 'active_record.initialize_timezone' do
   #     ActiveSupport.on_load(:active_record) do

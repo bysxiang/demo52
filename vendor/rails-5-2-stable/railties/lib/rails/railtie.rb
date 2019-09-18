@@ -6,34 +6,28 @@ require "active_support/core_ext/module/introspection"
 require "active_support/core_ext/module/delegation"
 
 module Rails
-  # <tt>Rails::Railtie</tt> is the core of the Rails framework and provides
-  # several hooks to extend Rails and/or modify the initialization process.
+  # Railtie是Rails框架的核心，并提供了几个钩子来扩展Rails或修改初始化过程。
   #
-  # Every major component of Rails (Action Mailer, Action Controller, Active
-  # Record, etc.) implements a railtie. Each of them is responsible for their
-  # own initialization. This makes Rails itself absent of any component hooks,
-  # allowing other components to be used in place of any of the Rails defaults.
+  # Rails的每个主要组件(Action Mailer, Action Controller, Active View, 
+  # Active Record和Active Resource)都是一个Railtie。它们负责自己的初始化。这使得
+  # Rails本身没有任何组件钩子，允许其他组件使用Rails默认值位置。
   #
-  # Developing a Rails extension does _not_ require implementing a railtie, but
-  # if you need to interact with the Rails framework during or after boot, then
-  # a railtie is needed.
+  # 开发一个Rails扩展，并不需要任何Railtie实现，但如果你需要在Rails框架启动期间或启动
+  # 之后与其进行交互，那么需要Railtie实现。
   #
-  # For example, an extension doing any of the following would need a railtie:
+  # 例如，以下扩展操作需要Railtie：
   #
-  # * creating initializers
-  # * configuring a Rails framework for the application, like setting a generator
-  # * adding <tt>config.*</tt> keys to the environment
-  # * setting up a subscriber with <tt>ActiveSupport::Notifications</tt>
-  # * adding Rake tasks
+  # * 创建initializers
+  # * 为应用程序配置Rails框架，例如设置一个generator
+  # * 向environment添加config.\*键
+  # * 使用ActiveSupport::Notifications设置订阅者
+  # * 添加rake任务
   #
-  # == Creating a Railtie
+  # == 创建一个Railtie
   #
-  # To extend Rails using a railtie, create a subclass of <tt>Rails::Railtie</tt>.
-  # This class must be loaded during the Rails boot process, and is conventionally
-  # called <tt>MyNamespace::Railtie</tt>.
+  # 使用Railtie扩展Rails，创建一个继承的Railtie类，继承Rails::Railtie。这个类必须在Rails启动过程中加载。
   #
-  # The following example demonstrates an extension which can be used with or
-  # without Rails.
+  # 以下示例演示了可以使用或不使用Rails的扩展：
   #
   #   # lib/my_gem/railtie.rb
   #   module MyGem
@@ -44,10 +38,9 @@ module Rails
   #   # lib/my_gem.rb
   #   require 'my_gem/railtie' if defined?(Rails)
   #
-  # == Initializers
+  # == 初始化器
   #
-  # To add an initialization step to the Rails boot process from your railtie, just
-  # define the initialization code with the +initializer+ macro:
+  # 要在Rails启动过程中添加一个Railtie初始化步骤，你只需要创建一个初始化程序块：
   #
   #   class MyRailtie < Rails::Railtie
   #     initializer "my_railtie.configure_rails_initialization" do
@@ -55,8 +48,7 @@ module Rails
   #     end
   #   end
   #
-  # If specified, the block can also receive the application object, in case you
-  # need to access some application-specific configuration, like middleware:
+  # 如果指定了参数，该块可接收application对象，你可以访问一些特定于应用程序的配置，比如中间件：
   #
   #   class MyRailtie < Rails::Railtie
   #     initializer "my_railtie.configure_rails_initialization" do |app|
@@ -64,30 +56,25 @@ module Rails
   #     end
   #   end
   #
-  # Finally, you can also pass <tt>:before</tt> and <tt>:after</tt> as options to
-  # +initializer+, in case you want to couple it with a specific step in the
-  # initialization process.
+  # 最后，你也能够传递:before和:after选项给initializer，在这种情况下，你可能希望将其与初始化过程特定步骤相结合。
   #
   # == Configuration
   #
-  # Railties can access a config object which contains configuration shared by all
-  # railties and the application:
+  # 在Railtie类内，你可以访问包含配置的配置对象，他在应用程序的所有railtie中共享。
   #
   #   class MyRailtie < Rails::Railtie
   #     # Customize the ORM
   #     config.app_generators.orm :my_railtie_orm
   #
-  #     # Add a to_prepare block which is executed once in production
-  #     # and before each request in development.
+  #     # 添加一个to_prepare块，在每个请求之前执行它。
   #     config.to_prepare do
   #       MyRailtie.setup!
   #     end
   #   end
   #
-  # == Loading Rake Tasks and Generators
+  # == 加载rake任务与生成器
   #
-  # If your railtie has Rake tasks, you can tell Rails to load them through the method
-  # +rake_tasks+:
+  # 如果你的railtie有rake任务，你可以告诉Rails通过该方法来加载它们的rake_tasks：
   #
   #   class MyRailtie < Rails::Railtie
   #     rake_tasks do
@@ -95,9 +82,8 @@ module Rails
   #     end
   #   end
   #
-  # By default, Rails loads generators from your load path. However, if you want to place
-  # your generators at a different location, you can specify in your railtie a block which
-  # will load them during normal generators lookup:
+  # 默认情况下，Rails从你的加载路径加载生成器。但是，如果你想放置你的生成器在不同的
+  # 位置，你可以在你的Railtie中指定一个块，将在正常的生成器查找期间加载它们：
   #
   #   class MyRailtie < Rails::Railtie
   #     generators do
@@ -105,16 +91,17 @@ module Rails
   #     end
   #   end
   #
-  # Since filenames on the load path are shared across gems, be sure that files you load
-  # through a railtie have unique names.
+  # 由于加载路径上的文件名是跨gems共享的，因此请确保加载的文件有唯一的名称。
   #
   # == Application and Engine
   #
   # An engine is nothing more than a railtie with some initializers already set. And since
   # <tt>Rails::Application</tt> is an engine, the same configuration described here can be
   # used in both.
+  # 一个engine不过是已经设置了一些初始化器的railtie。Rails::Application是一个引擎，这里描述的配置
+  # 适用于两者。
   #
-  # Be sure to look at the documentation of those specific classes for more information.
+  # 请务必查看这些特定类的文档以获得更多信息。
   class Railtie
     autoload :Configuration, "rails/railtie/configuration"
 

@@ -36,9 +36,8 @@ module AbstractController
         super
       end
 
-      # Declare a controller method as a helper. For example, the following
-      # makes the +current_user+ and +logged_in?+ controller methods available
-      # to the view:
+      # 将控制器方法声明为helper。例如，以下内容使current_user和logged_in?方法可以
+      # 在视图中使用。
       #   class ApplicationController < ActionController::Base
       #     helper_method :current_user, :logged_in?
       #
@@ -70,24 +69,21 @@ module AbstractController
         end
       end
 
-      # The +helper+ class method can take a series of helper module names, a block, or both.
+      # 找个helper类方法可以采用一系列辅助模块的名称，块或两者。
       #
       # ==== Options
-      # * <tt>*args</tt> - Module, Symbol, String
-      # * <tt>block</tt> - A block defining helper methods
+      # * <tt>*args</tt> - 模块、符号或字符串
+      # * <tt>block</tt> - 一个定义helper方法的块
       #
-      # When the argument is a module it will be included directly in the template class.
+      # 当参数是模块时，它将直接包含在模块类中。
       #   helper FooHelper # => includes FooHelper
       #
-      # When the argument is a string or symbol, the method will provide the "_helper" suffix, require the file
-      # and include the module in the template class. The second form illustrates how to include custom helpers
-      # when working with namespaced controllers, or other cases where the file containing the helper definition is not
-      # in one of Rails' standard load paths:
+      # 当参数是字符串或符号时，加载名称_helper文件名。第二个表单说明了如何包含 使用命名空间的自定义助手或者其他不包含helper定义
+      # 的文件情况下，在一个标准加载路径中。
       #   helper :foo             # => requires 'foo_helper' and includes FooHelper
       #   helper 'resources/foo'  # => requires 'resources/foo_helper' and includes Resources::FooHelper
       #
-      # Additionally, the +helper+ class method can receive and evaluate a block, making the methods defined available
-      # to the template.
+      # 此外，此helper类方法还可以接受和执行一个块，从而使定义的方法可用在模板。
       #
       #   # One line
       #   helper { def hello() "Hello, world!" end }
@@ -99,8 +95,7 @@ module AbstractController
       #     end
       #   end
       #
-      # Finally, all the above styles can be mixed together, and the +helper+ method can be invoked with a mix of
-      # +symbols+, +strings+, +modules+ and blocks.
+      # 最后，所有上述样式可以混合在一起，符号、字符串、模块和块。
       #
       #   helper(:three, BlindHelper) { def mice() 'mice' end }
       #

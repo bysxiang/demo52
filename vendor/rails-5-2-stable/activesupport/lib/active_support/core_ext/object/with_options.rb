@@ -3,13 +3,11 @@
 require "active_support/option_merger"
 
 class Object
-  # An elegant way to factor duplication out of options passed to a series of
-  # method calls. Each method called in the block, with the block variable as
-  # the receiver, will have its options merged with the default +options+ hash
-  # provided. Each method called on the block variable must take an options
-  # hash as its final argument.
+  # 一种优雅的方法，可以重复的选项值传递给一系列方法调用。块中调用的每个方法，块变量
+  # 为接收器，将其选项与默认+options+合并提供。对块鼻哪里的每个方法都必须接受一个
+  # hash 选项并作为最后一个参数。
   #
-  # Without <tt>with_options</tt>, this code contains duplication:
+  # 没有<tt>with_options</tt>，此代码包含重复代码:
   #
   #   class Account < ActiveRecord::Base
   #     has_many :customers, dependent: :destroy
@@ -18,7 +16,7 @@ class Object
   #     has_many :expenses,  dependent: :destroy
   #   end
   #
-  # Using <tt>with_options</tt>, we can remove the duplication:
+  # 使用 <tt>with_options</tt>，我们可以移除重复选项
   #
   #   class Account < ActiveRecord::Base
   #     with_options dependent: :destroy do |assoc|
@@ -29,15 +27,14 @@ class Object
   #     end
   #   end
   #
-  # It can also be used with an explicit receiver:
+  # 它也可以与显式接收器一起使用:
   #
   #   I18n.with_options locale: user.locale, scope: 'newsletter' do |i18n|
   #     subject i18n.t :subject
   #     body    i18n.t :body, user_name: user.name
   #   end
   #
-  # When you don't pass an explicit receiver, it executes the whole block
-  # in merging options context:
+  # 当您不传递显式接收器时，它将在合并选项上下文中执行整个块:
   #
   #   class Account < ActiveRecord::Base
   #     with_options dependent: :destroy do
@@ -48,9 +45,9 @@ class Object
   #     end
   #   end
   #
-  # <tt>with_options</tt> can also be nested since the call is forwarded to its receiver.
+  # <tt>with_options</tt> 也可以嵌套，因为调用被转发到其接受者。
   #
-  # NOTE: Each nesting level will merge inherited defaults in addition to their own.
+  # 注意: 除了自己的嵌套级别外，每个嵌套级别还将合并继承的默认值。
   #
   #   class Post < ActiveRecord::Base
   #     with_options if: :persisted?, length: { minimum: 50 } do
@@ -58,14 +55,13 @@ class Object
   #     end
   #   end
   #
-  # The code is equivalent to:
+  # 代码相当于:
   #
   #   validates :content, length: { minimum: 50 }, if: -> { content.present? }
   #
-  # Hence the inherited default for +if+ key is ignored.
+  # 因此，忽略+if+键的继承默认值。
   #
-  # NOTE: You cannot call class methods implicitly inside of with_options.
-  # You can access these methods using the class name instead:
+  # 注意: 您不能在with_options中隐式调用类方法。您可以使用类名来访问这些方法：
   #
   #   class Phone < ActiveRecord::Base
   #     enum phone_number_type: [home: 0, office: 1, mobile: 2]

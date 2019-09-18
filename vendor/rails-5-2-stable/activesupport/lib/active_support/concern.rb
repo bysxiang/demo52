@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module ActiveSupport
-  # A typical module looks like this:
+  # 一个典型的模块是这样的:
   #
   #   module M
   #     def self.included(base)
@@ -16,8 +16,7 @@ module ActiveSupport
   #     end
   #   end
   #
-  # By using <tt>ActiveSupport::Concern</tt> the above module could instead be
-  # written as:
+  # 通过使用<tt>ActiveSupport::Concern</tt>，可以将上述模块写为:
   #
   #   require 'active_support/concern'
   #
@@ -33,9 +32,7 @@ module ActiveSupport
   #     end
   #   end
   #
-  # Moreover, it gracefully handles module dependencies. Given a +Foo+ module
-  # and a +Bar+ module which depends on the former, we would typically write the
-  # following:
+  # 而且，它优雅地处理模块依赖性。给出一个+Foo+和+Bar+模块，后者依赖前者，我们通常会这么写:
   #
   #   module Foo
   #     def self.included(base)
@@ -54,12 +51,12 @@ module ActiveSupport
   #   end
   #
   #   class Host
-  #     include Foo # We need to include this dependency for Bar
-  #     include Bar # Bar is the module that Host really needs
+  #     include Foo # 我们需要为Bar包含这种依赖
+  #     include Bar # Bar是Host真正需要的模块
   #   end
   #
-  # But why should +Host+ care about +Bar+'s dependencies, namely +Foo+? We
-  # could try to hide these from +Host+ directly including +Foo+ in +Bar+:
+  # 但+Host+为什么要关心+Bar+的依赖关系，也就是+Foo+? 我们可以尝试隐藏这些+Host+
+  # 直接include +Foo+，+Foo+去include +Bar+
   #
   #   module Bar
   #     include Foo
@@ -72,9 +69,8 @@ module ActiveSupport
   #     include Bar
   #   end
   #
-  # Unfortunately this won't work, since when +Foo+ is included, its <tt>base</tt>
-  # is the +Bar+ module, not the +Host+ class. With <tt>ActiveSupport::Concern</tt>,
-  # module dependencies are properly resolved:
+  # 不幸的是，这将不起作用，因为当+Foo+被包含进来时，它的base是+Bar+模块，而不是+Host+类。
+  # <tt>ActiveSupport::Concern</tt>可以正确处理依赖:
   #
   #   require 'active_support/concern'
   #
@@ -97,7 +93,7 @@ module ActiveSupport
   #   end
   #
   #   class Host
-  #     include Bar # It works, now Bar takes care of its dependencies
+  #     include Bar # 它可以工作，现在Bar处理它的依赖项。
   #   end
   # 简单来说，这个模块重写了append_features, included回调
   # included回调可被模块单独调用，它用于需要在include一个模块

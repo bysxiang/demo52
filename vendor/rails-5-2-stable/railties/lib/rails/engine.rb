@@ -7,20 +7,14 @@ require "pathname"
 require "thread"
 
 module Rails
-  # <tt>Rails::Engine</tt> allows you to wrap a specific Rails application or subset of
-  # functionality and share it with other applications or within a larger packaged application.
-  # Every <tt>Rails::Application</tt> is just an engine, which allows for simple
-  # feature and application sharing.
+  # Rails::Engine允许你包装指定的Rails应用或子集功能，并与其他应用程序共享。Rails3.0之后，
+  # 每一个Rails::Application只是一个引擎，它允许简单功能和应用程序共享。
   #
-  # Any <tt>Rails::Engine</tt> is also a <tt>Rails::Railtie</tt>, so the same
-  # methods (like <tt>rake_tasks</tt> and +generators+) and configuration
-  # options that are available in railties can also be used in engines.
+  # 任何Rails::Engine也是一个Rails::Railtie，所以相同的方法(如rake_tasks和generator)和配置可用于任何继承于Railtie的类。
   #
-  # == Creating an Engine
+  # == 创建一个引擎
   #
-  # If you want a gem to behave as an engine, you have to specify an +Engine+
-  # for it somewhere inside your plugin's +lib+ folder (similar to how we
-  # specify a +Railtie+):
+  # 如果你想要一个gem作为引擎，你必须在里面指定一个一个Engine，你的插件 lib目录(类似于我们如何制定一个Railtie)：
   #
   #   # lib/my_engine.rb
   #   module MyEngine
@@ -28,20 +22,16 @@ module Rails
   #     end
   #   end
   #
-  # Then ensure that this file is loaded at the top of your <tt>config/application.rb</tt>
-  # (or in your +Gemfile+) and it will automatically load models, controllers and helpers
-  # inside +app+, load routes at <tt>config/routes.rb</tt>, load locales at
-  # <tt>config/locales/*</tt>, and load tasks at <tt>lib/tasks/*</tt>.
+  # 然后确保该文件在你的config/application.rb的顶部加载(或你的Gemfile中),它将自动加载模型，控制器和帮助，在app里面
+  # 加载config/routes.rb，加载config/locales/*，并在lib/tasks/*加载任务。
   #
   # == Configuration
   #
-  # Besides the +Railtie+ configuration which is shared across the application, in a
-  # <tt>Rails::Engine</tt> you can access <tt>autoload_paths</tt>, <tt>eager_load_paths</tt>
-  # and <tt>autoload_once_paths</tt>, which, differently from a <tt>Railtie</tt>, are scoped to
-  # the current engine.
+  # 除了在整个应用程序中共享的Railtie配置外，在Rails::Engine你可以访问autoload_paths, eager_load_paths和
+  # autoload_once_paths，与Railtie不同，它们的范围是当前引擎。
   #
   #   class MyEngine < Rails::Engine
-  #     # Add a load path for this specific Engine
+  #     添加一条加载路径到这个引擎
   #     config.autoload_paths << File.expand_path("lib/some/path", __dir__)
   #
   #     initializer "my_engine.add_middleware" do |app|
@@ -51,7 +41,7 @@ module Rails
   #
   # == Generators
   #
-  # You can set up generators for engines with <tt>config.generators</tt> method:
+  # 你可以通过config.generators设置生成器：
   #
   #   class MyEngine < Rails::Engine
   #     config.generators do |g|
@@ -61,35 +51,32 @@ module Rails
   #     end
   #   end
   #
-  # You can also set generators for an application by using <tt>config.app_generators</tt>:
+  # 你还可以使用config.app_generators为应用程序设置生成器：:
   #
   #   class MyEngine < Rails::Engine
-  #     # note that you can also pass block to app_generators in the same way you
-  #     # can pass it to generators method
+  #     # 请注意，您也可以级那个块传递给app_generators，方法与将其传递给generators方法
+  #     # 相同
   #     config.app_generators.orm :datamapper
   #   end
   #
   # == Paths
   #
-  # Applications and engines have flexible path configuration, meaning that you
-  # are not required to place your controllers at <tt>app/controllers</tt>, but
-  # in any place which you find convenient.
+  # 应用程序和引擎具有更灵活的路径配置(与前面的硬编码路径配置相反)。这意味着你不需要将控制器
+  # 放在app/controllers内，你可以放置在任意你觉得方便的地方。
   #
-  # For example, let's suppose you want to place your controllers in <tt>lib/controllers</tt>.
-  # You can set that as an option:
+  # 例如，假设你想要将控制器放置在lib/controllers中，你可以把它设置为一个选项：
   #
   #   class MyEngine < Rails::Engine
   #     paths["app/controllers"] = "lib/controllers"
   #   end
   #
-  # You can also have your controllers loaded from both <tt>app/controllers</tt> and
-  # <tt>lib/controllers</tt>:
+  # 你还可以让你的控制器同时从app/controllers和lib/controllers两个地方加载：
   #
   #   class MyEngine < Rails::Engine
   #     paths["app/controllers"] << "lib/controllers"
   #   end
   #
-  # The available paths in an engine are:
+  # 引擎的可用路径：
   #
   #   class MyEngine < Rails::Engine
   #     paths["app"]                 # => ["app"]
@@ -105,16 +92,14 @@ module Rails
   #     paths["config/routes.rb"]    # => ["config/routes.rb"]
   #   end
   #
-  # The <tt>Application</tt> class adds a couple more paths to this set. And as in your
-  # <tt>Application</tt>, all folders under +app+ are automatically added to the load path.
-  # If you have an <tt>app/services</tt> folder for example, it will be added by default.
+  # Application类为此集合添加了更多路径。在你的应用程序中，app内所有文件夹都自动添加到了加载路径
+  # 中。例如，如果您有一个app/services文件中，它将默认添加。
   #
   # == Endpoint
   #
-  # An engine can also be a Rack application. It can be useful if you have a Rack application that
-  # you would like to wrap with +Engine+ and provide with some of the +Engine+'s features.
+  # 所有引擎同样也是一个Rack应用。如果你有一个Rack程序，那会很有用。你希望使用Engine包装，并提供一些引擎功能。
   #
-  # To do that, use the +endpoint+ method:
+  # 要做到这一点，使用endpoint方法：
   #
   #   module MyEngine
   #     class Engine < Rails::Engine
@@ -122,7 +107,7 @@ module Rails
   #     end
   #   end
   #
-  # Now you can mount your engine in application's routes just like that:
+  # 现在，你可以将引擎安装在应用程序的路由中：
   #
   #   Rails.application.routes.draw do
   #     mount MyEngine::Engine => "/engine"
@@ -130,8 +115,7 @@ module Rails
   #
   # == Middleware stack
   #
-  # As an engine can now be a Rack endpoint, it can also have a middleware
-  # stack. The usage is exactly the same as in <tt>Application</tt>:
+  # 作为引擎现在可以成为一个Rack endpoint，它也可以有一个中间件堆栈。用法与Aplication相同：
   #
   #   module MyEngine
   #     class Engine < Rails::Engine
@@ -141,8 +125,7 @@ module Rails
   #
   # == Routes
   #
-  # If you don't specify an endpoint, routes will be used as the default
-  # endpoint. You can use them just like you use an application's routes:
+  # 如果不指定端点，则将使用路由作为默认值端点。你可以像使用应用程序的路由一样使用它们：
   #
   #   # ENGINE/config/routes.rb
   #   MyEngine::Engine.routes.draw do
@@ -151,36 +134,32 @@ module Rails
   #
   # == Mount priority
   #
-  # Note that now there can be more than one router in your application, and it's better to avoid
-  # passing requests through many routers. Consider this situation:
+  # 请注意，你的应用程序现在又多个路由器，最好避免通过许多路由器传递请求。考虑这种情况：
   #
   #   Rails.application.routes.draw do
   #     mount MyEngine::Engine => "/blog"
   #     get "/blog/omg" => "main#omg"
   #   end
   #
-  # +MyEngine+ is mounted at <tt>/blog</tt>, and <tt>/blog/omg</tt> points to application's
-  # controller. In such a situation, requests to <tt>/blog/omg</tt> will go through +MyEngine+,
-  # and if there is no such route in +Engine+'s routes, it will be dispatched to <tt>main#omg</tt>.
-  # It's much better to swap that:
+  # MyEngine mount在/blog，/blog/omg指向application的控制器。在这种情况下，对/blog/omg的请求将通过
+  # MyEngine处理，如果在Engine的路由没有这样的配置，它将被分派到main/omg。交换它们更好：
   #
   #   Rails.application.routes.draw do
   #     get "/blog/omg" => "main#omg"
   #     mount MyEngine::Engine => "/blog"
   #   end
   #
-  # Now, +Engine+ will get only requests that were not handled by +Application+.
+  # 现在，Engine只会获得Application未处理的请求
   #
   # == Engine name
   #
-  # There are some places where an Engine's name is used:
+  # 有一些地方使用引擎的名字：
   #
-  # * routes: when you mount an Engine with <tt>mount(MyEngine::Engine => '/my_engine')</tt>,
-  #   it's used as default <tt>:as</tt> option
-  # * rake task for installing migrations <tt>my_engine:install:migrations</tt>
+  # * 路由： 当你使用mount (MyEngine::Engine => '/my_engine')安装Engine时，它被当作默认值 ：as选项
+  # * 一些rake任务基于引擎名称。例如my_engine:install::migrations， my_engine:install:assets
   #
-  # Engine name is set by default based on class name. For <tt>MyEngine::Engine</tt> it will be
-  # <tt>my_engine_engine</tt>. You can change it manually using the <tt>engine_name</tt> method:
+  # 引擎名称默认设置为基于类名，对于MyEngine::Engine它将是my_engine_engine。你可以使用engine_name方法
+  # 手动更改它
   #
   #   module MyEngine
   #     class Engine < Rails::Engine
@@ -190,13 +169,11 @@ module Rails
   #
   # == Isolated Engine
   #
-  # Normally when you create controllers, helpers and models inside an engine, they are treated
-  # as if they were created inside the application itself. This means that all helpers and
-  # named routes from the application will be available to your engine's controllers as well.
+  # 通常，当您在引擎中创建控制器、助手和模型时，会对它们进行处理就好像它们是在应用程序内部创建的一样。
+  # 这意味着所有的帮手和应用程序中的命名路由也将对引擎的控制器可用。
   #
-  # However, sometimes you want to isolate your engine from the application, especially if your engine
-  # has its own router. To do that, you simply need to call +isolate_namespace+. This method requires
-  # you to pass a module where all your controllers, helpers and models should be nested to:
+  # 然而，有时您希望将引擎与应用程序隔离，特别是如果您的引擎有自己的路由器。为此，只需调用isolate_namespace。此
+  # 方法需要你传递一个模块，在该模块内，您所有的控制器、辅助程序及模型均应嵌套至：
   #
   #   module MyEngine
   #     class Engine < Rails::Engine
@@ -204,41 +181,32 @@ module Rails
   #     end
   #   end
   #
-  # With such an engine, everything that is inside the +MyEngine+ module will be isolated from
-  # the application.
+  # 这样，+MyEngine+模块内的所有内容将被隔离。
   #
-  # Consider this controller:
+  # 考虑这样的控制器：
   #
   #   module MyEngine
   #     class FooController < ActionController::Base
   #     end
   #   end
   #
-  # If the +MyEngine+ engine is marked as isolated, +FooController+ only has
-  # access to helpers from +MyEngine+, and <tt>url_helpers</tt> from
-  # <tt>MyEngine::Engine.routes</tt>.
+  # 如果一个引擎被标记为孤立的，+FooController+只能访问来自+Engine+的助手和来自MyEngine::Engine.routes
+  # 的url_helpers.
   #
-  # The next thing that changes in isolated engines is the behavior of routes.
-  # Normally, when you namespace your controllers, you also need to namespace
-  # the related routes. With an isolated engine, the engine's namespace is
-  # automatically applied, so you don't need to specify it explicitly in your
-  # routes:
+  # 隔离引擎的下一个变化时路由行为。通常，在为控制器指定命名空间时，还需要为路由指定
+  # 命名空间。对于隔离引擎，引擎的命名空间时自动应用的，因此您不需要在您的路由中指定它：
   #
   #   MyEngine::Engine.routes.draw do
   #     resources :articles
   #   end
   #
-  # If +MyEngine+ is isolated, The routes above will point to
-  # <tt>MyEngine::ArticlesController</tt>. You also don't need to use longer
-  # url helpers like +my_engine_articles_path+. Instead, you should simply use
-  # +articles_path+, like you would do with your main application.
+  # 如果MyEngine是隔离的，上面的路由将自动指向MyEngine::ApplicationController。而且，你不必使
+  # 用更长的 url 帮助方法，如my_engine_articles_path。相反，你应该简单的使用articles_path，
+  # 与你的应用中一样。
   #
-  # To make this behavior consistent with other parts of the framework,
-  # isolated engines also have an effect on <tt>ActiveModel::Naming</tt>. In a
-  # normal Rails app, when you use a namespaced model such as
-  # <tt>Namespace::Article</tt>, <tt>ActiveModel::Naming</tt> will generate
-  # names with the prefix "namespace". In an isolated engine, the prefix will
-  # be omitted in url helpers and form fields, for convenience.
+  # 为了使这种行为与框架的其他部分保持一致，一个孤立的引擎也会影响ActiveModel::Naming。当你使用
+  # 一个命名空间模型时，例如MyEngine::Article，它通常会使用前缀"my_engine"，在一个隔离引擎中，
+  # 为方便表单自动，url 帮助方法中前缀会被省略。
   #
   #   polymorphic_url(MyEngine::Article.new)
   #   # => "articles_path" # not "my_engine_articles_path"
@@ -247,17 +215,14 @@ module Rails
   #     text_field :title # => <input type="text" name="article[title]" id="article_title" />
   #   end
   #
-  # Additionally, an isolated engine will set its own name according to its
-  # namespace, so <tt>MyEngine::Engine.engine_name</tt> will return
-  # "my_engine". It will also set +MyEngine.table_name_prefix+ to "my_engine_",
-  # meaning for example that <tt>MyEngine::Article</tt> will use the
-  # +my_engine_articles+ database table by default.
+  # 另外，一个隔离引擎会根据命名空间来设置它的名字，所以，MyEngine::Engine.engine_name将为
+  # 'my_engine'。它也将设置MyEngine.table_name_prefix为"my_engine_"，将MyEngine::Aritle更改为
+  # 使用my_engine_articles表。
   #
-  # == Using Engine's routes outside Engine
+  # == 在引擎外使用引擎路由
   #
-  # Since you can now mount an engine inside application's routes, you do not have direct access to +Engine+'s
-  # <tt>url_helpers</tt> inside +Application+. When you mount an engine in an application's routes, a special helper is
-  # created to allow you to do that. Consider such a scenario:
+  # 由于现在可以在应用程序的路由中安装一个引擎，所以无法在应用程序的内部直接访问+Engine+的url_helpers。
+  # 当你在应用程序的路由中安装一个引擎时，一个特殊的助手可以让你做到这一点。考虑这样一个场景：
   #
   #   # config/routes.rb
   #   Rails.application.routes.draw do
@@ -265,7 +230,7 @@ module Rails
   #     get "/foo" => "foo#index"
   #   end
   #
-  # Now, you can use the <tt>my_engine</tt> helper inside your application:
+  # 现在，你可以使用my_engine帮助方法在你的应用中：
   #
   #   class FooController < ApplicationController
   #     def index
@@ -273,7 +238,7 @@ module Rails
   #     end
   #   end
   #
-  # There is also a <tt>main_app</tt> helper that gives you access to application's routes inside Engine:
+  # 还有一个main_app帮助器，你可以访问Engine中的应用程序路由：
   #
   #   module MyEngine
   #     class BarController
@@ -283,31 +248,26 @@ module Rails
   #     end
   #   end
   #
-  # Note that the <tt>:as</tt> option given to mount takes the <tt>engine_name</tt> as default, so most of the time
-  # you can simply omit it.
+  # 请注意，提供给:as选项将engine_name设置为默认值，所以大部分时间，你可以省略它。
   #
-  # Finally, if you want to generate a url to an engine's route using
-  # <tt>polymorphic_url</tt>, you also need to pass the engine helper. Let's
-  # say that you want to create a form pointing to one of the engine's routes.
-  # All you need to do is pass the helper as the first element in array with
-  # attributes for url:
+  # 最后，如果要使用引擎的路由polymorhpic_url生成一个url,你还需要传递引擎助手。
+  # 让我们说你想要创建一个指向一个引擎路由的表单。所以你需要做的是把帮助者作为数组中的
+  # 第一个元素网址属性：
   #
   #   form_for([my_engine, @user])
   #
-  # This code will use <tt>my_engine.user_path(@user)</tt> to generate the proper route.
+  # 此代码将使用my_engine.user_path(@user)生成正确的路由。
   #
-  # == Isolated engine's helpers
+  # == 隔离引擎的帮助器(Isolated engine's helpers)
   #
-  # Sometimes you may want to isolate engine, but use helpers that are defined for it.
-  # If you want to share just a few specific helpers you can add them to application's
-  # helpers in ApplicationController:
+  # 有时您可能想要隔离引擎，但使用为其定义的帮助程序。如果您想要共享一些特定的帮助程序，可以将其
+  # 添加到你应用的ApplicationController中:
   #
   #   class ApplicationController < ActionController::Base
   #     helper MyEngine::SharedEngineHelper
   #   end
   #
-  # If you want to include all of the engine's helpers, you can use the #helper method on an engine's
-  # instance:
+  # 如果你想要包括所有引擎的助手，可以在引擎上使用#helper方法：
   #
   #   class ApplicationController < ActionController::Base
   #     helper MyEngine::Engine.helpers
@@ -316,31 +276,28 @@ module Rails
   # It will include all of the helpers from engine's directory. Take into account that this does
   # not include helpers defined in controllers with helper_method or other similar solutions,
   # only helpers defined in the helpers directory will be included.
+  # 它将包含engine目录中所有的helpers程序。考虑到这一点，不包括helper_method或其他类似解决方案的控制器中
+  # 定义的helpers，只包括在helper目录中定义的程序。
   #
-  # == Migrations & seed data
+  # == 迁移与种子数据(Migrations & seed data)
   #
-  # Engines can have their own migrations. The default path for migrations is exactly the same
-  # as in application: <tt>db/migrate</tt>
+  # 引擎可以拥有自己的迁移。默认路径在应用程序中：db/migrate
   #
-  # To use engine's migrations in application you can use the rake task below, which copies them to
-  # application's dir:
+  # 要在应用程序中使用引擎的迁移，你可以使用rake任务，将它们复制到应用程序的目录：
   #
   #   rake ENGINE_NAME:install:migrations
   #
-  # Note that some of the migrations may be skipped if a migration with the same name already exists
-  # in application. In such a situation you must decide whether to leave that migration or rename the
-  # migration in the application and rerun copying migrations.
+  # 注意，如果应用中已存在同名迁移，则可能会跳过某些迁移。在这种情况下，您必须决定是保留迁移还是重命名在应用程序
+  # 中迁移并重新复制迁移。
   #
-  # If your engine has migrations, you may also want to prepare data for the database in
-  # the <tt>db/seeds.rb</tt> file. You can load that data using the <tt>load_seed</tt> method, e.g.
+  # 如果你的引擎有迁移，你可能还行为数据库准备种子数据 seeds.rb。你可以使用load_seed方法来加载这些数据。
   #
   #   MyEngine::Engine.load_seed
   #
-  # == Loading priority
+  # == (加载优先级)Loading priority
   #
-  # In order to change engine's priority you can use +config.railties_order+ in the main application.
-  # It will affect the priority of loading views, helpers, assets, and all the other files
-  # related to engine or application.
+  # 为了更改引擎的优先级，你可以在主应用程序中使用config.railties_order。这将影响加载视图，帮助程序，
+  # assets和所有其他文件的优先级，涉及引擎或应用程序。
   #
   #   # load Blog::Engine with highest priority, followed by application and other railties
   #   config.railties_order = [Blog::Engine, :main_app, :all]

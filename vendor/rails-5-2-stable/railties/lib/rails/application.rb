@@ -11,60 +11,53 @@ require "rails/engine"
 require "rails/secrets"
 
 module Rails
-  # An Engine with the responsibility of coordinating the whole boot process.
+  # 引擎负责协调整个引导过程
   #
   # == Initialization
   #
-  # Rails::Application is responsible for executing all railties and engines
-  # initializers. It also executes some bootstrap initializers (check
-  # Rails::Application::Bootstrap) and finishing initializers, after all the others
-  # are executed (check Rails::Application::Finisher).
+  # Rails::Application负责所有的railties和引擎初始化。它还执行一些bootstrap初始化程序
+  # (检查Rails::Application::Bootstrap)和完成初始化程序(检查Rails::Application::Finisher)。
   #
   # == Configuration
   #
-  # Besides providing the same configuration as Rails::Engine and Rails::Railtie,
-  # the application object has several specific configurations, for example
-  # "cache_classes", "consider_all_requests_local", "filter_parameters",
-  # "logger" and so forth.
+  # 除了提供与Rails::Engine和Rails::Railtie相同的配置外，application对象具有多个特定
+  # 配置，例如：cache_classes, consideration_all_requests_local, filter_parameters
+  # , logger 等等。
   #
-  # Check Rails::Application::Configuration to see them all.
+  # 检查Rails::Application::Configuration以查看所有内容。
   #
   # == Routes
   #
-  # The application object is also responsible for holding the routes and reloading routes
-  # whenever the files change in development.
+  # 在开发模式，每当文件发生变化时，应用程序对象还负责保存路由和重新加载路由。
   #
   # == Middlewares
   #
-  # The Application is also responsible for building the middleware stack.
+  # Application还负责构建中间件堆栈。
   #
   # == Booting process
   #
-  # The application is also responsible for setting up and executing the booting
-  # process. From the moment you require "config/application.rb" in your app,
-  # the booting process goes like this:
+  # application还负责设置和执行引导过程。从您的应用程序require "config/application.rb"
+  # 开始，启动过程如下所示:
   #
-  #   1)  require "config/boot.rb" to setup load paths
+  #   1)  require "config/boot.rb" 设置加载路径。
   #   2)  require railties and engines
-  #   3)  Define Rails.application as "class MyApp::Application < Rails::Application"
-  #   4)  Run config.before_configuration callbacks
-  #   5)  Load config/environments/ENV.rb
-  #   6)  Run config.before_initialize callbacks
-  #   7)  Run Railtie#initializer defined by railties, engines and application.
-  #       One by one, each engine sets up its load paths, routes and runs its config/initializers/* files.
-  #   8)  Custom Railtie#initializers added by railties, engines and applications are executed
-  #   9)  Build the middleware stack and run to_prepare callbacks
-  #   10) Run config.before_eager_load and eager_load! if eager_load is true
-  #   11) Run config.after_initialize callbacks
+  #   3)  定义 Rails.application as "class MyApp::Application < Rails::Application"
+  #   4)  运行 config.before_configuration 回调
+  #   5)  加载 config/environments/ENV.rb
+  #   6)  运行 config.before_initialize 回调
+  #   7)  运行定义在railties, engines和application的Railtie#initializer。
+  #       每个引擎一个接一个的加载路径，routes并运行config/initializers/*下的文件。
+  #   8)  执行由railties, engines和application添加到Railtie#initializers的初始化器
+  #   9)  构建中间件栈并运行to_prepare回调
+  #   10) 如果eager_load为true，运行config.before_eager_load和eager_load!
+  #   11) 运行 config.after_initialize 回调
   #
   # == Multiple Applications
   #
-  # If you decide to define multiple applications, then the first application
-  # that is initialized will be set to +Rails.application+, unless you override
-  # it with a different application.
+  # 如果你决定定义多个应用程序，则第一个应用程序初始化将被设置为Rails.application，除非
+  # 你重写它与一个不同的应用程序。
   #
-  # To create a new application, you can instantiate a new instance of a class
-  # that has already been created:
+  # 要创建新application，可以实例化以创建类的新实例:
   #
   #   class Application < Rails::Application
   #   end
@@ -72,13 +65,11 @@ module Rails
   #   first_application  = Application.new
   #   second_application = Application.new(config: first_application.config)
   #
-  # In the above example, the configuration from the first application was used
-  # to initialize the second application. You can also use the +initialize_copy+
-  # on one of the applications to create a copy of the application which shares
-  # the configuration.
+  # 在上面的示例中，使用了来自第一个应用程序的配置来初始化第二个应用程序。你页可以使用
+  # initialize_copy在其中一个应用程序上创建共享的应用程序副本配置。
   #
-  # If you decide to define Rake tasks, runners, or initializers in an
-  # application other than +Rails.application+, then you must run them manually.
+  # 如果你决定在一个Rails.application以外的应用中中定义Rake任务，runner或初始化器，
+  # 你必须手动运行它们。
   class Application < Engine
     autoload :Bootstrap,              "rails/application/bootstrap"
     autoload :Configuration,          "rails/application/configuration"
