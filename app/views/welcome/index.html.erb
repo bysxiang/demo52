@@ -1,1 +1,19 @@
 sdfsfsdfsd
+
+
+<script type="text/javascript">
+  $.ajax({
+    url: "/main/test_json",
+    type: "get",
+    success: function (json)
+    {
+      console.log("输出json");
+      console.log(json);
+    },
+    error: function (x, y, z)
+    {
+
+    }
+
+  });
+</script>

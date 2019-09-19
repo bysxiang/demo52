@@ -68,4 +68,4 @@ gem "sidekiq", path: "vendor/sidekiq-4.x"
 gem "warden", path: "vendor/warden-master"
 gem "devise", path: "vendor/devise-4.6.2"
 
-
+gem 'jquery-rails', '~> 4.3', '>= 4.3.5'

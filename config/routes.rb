@@ -23,6 +23,7 @@ Rails.application.routes.draw do
 
   
   get "main/index"
+  get "main/test_json"
 
   root "welcome#index"               
 

@@ -7,4 +7,9 @@ class MainController < ApplicationController
 
     render plain: "java"
   end
+
+  def test_json
+
+    render json: { name: "java", age: 13 }
+  end
 end
